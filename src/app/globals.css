@@ -3,14 +3,98 @@
 @tailwind utilities;
 
 :root {
+  /* Legacy variables for backward compatibility */
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Light mode color tokens */
+  --color-background-primary: #fafafa;
+  --color-background-secondary: #f5f5f5;
+  --color-background-tertiary: #e5e5e5;
+  --color-background-inverse: #171717;
+  
+  --color-foreground-primary: #171717;
+  --color-foreground-secondary: #404040;
+  --color-foreground-tertiary: #737373;
+  --color-foreground-inverse: #fafafa;
+  
+  --color-border-primary: #e5e5e5;
+  --color-border-secondary: #d4d4d4;
+  --color-border-focus: #0ea5e9;
+  
+  --color-primary-background: #0ea5e9;
+  --color-primary-foreground: #fafafa;
+  --color-primary-hover: #0284c7;
+  --color-primary-active: #0369a1;
+  
+  --color-secondary-background: #f1f5f9;
+  --color-secondary-foreground: #0f172a;
+  --color-secondary-hover: #e2e8f0;
+  --color-secondary-active: #cbd5e1;
+  
+  --color-success-background: #f0fdf4;
+  --color-success-foreground: #15803d;
+  --color-success-border: #bbf7d0;
+  
+  --color-warning-background: #fffbeb;
+  --color-warning-foreground: #b45309;
+  --color-warning-border: #fde68a;
+  
+  --color-error-background: #fef2f2;
+  --color-error-foreground: #b91c1c;
+  --color-error-border: #fecaca;
+  
+  --color-info-background: #eff6ff;
+  --color-info-foreground: #1d4ed8;
+  --color-info-border: #bfdbfe;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
+    /* Legacy variables for backward compatibility */
     --background: #0a0a0a;
     --foreground: #ededed;
+    
+    /* Dark mode color tokens */
+    --color-background-primary: #0a0a0a;
+    --color-background-secondary: #171717;
+    --color-background-tertiary: #262626;
+    --color-background-inverse: #fafafa;
+    
+    --color-foreground-primary: #fafafa;
+    --color-foreground-secondary: #d4d4d4;
+    --color-foreground-tertiary: #737373;
+    --color-foreground-inverse: #171717;
+    
+    --color-border-primary: #262626;
+    --color-border-secondary: #404040;
+    --color-border-focus: #38bdf8;
+    
+    --color-primary-background: #0284c7;
+    --color-primary-foreground: #fafafa;
+    --color-primary-hover: #0ea5e9;
+    --color-primary-active: #38bdf8;
+    
+    --color-secondary-background: #1e293b;
+    --color-secondary-foreground: #f1f5f9;
+    --color-secondary-hover: #334155;
+    --color-secondary-active: #475569;
+    
+    --color-success-background: #14532d;
+    --color-success-foreground: #dcfce7;
+    --color-success-border: #166534;
+    
+    --color-warning-background: #78350f;
+    --color-warning-foreground: #fef3c7;
+    --color-warning-border: #92400e;
+    
+    --color-error-background: #7f1d1d;
+    --color-error-foreground: #fee2e2;
+    --color-error-border: #991b1b;
+    
+    --color-info-background: #1e3a8a;
+    --color-info-foreground: #dbeafe;
+    --color-info-border: #1e40af;
   }
 }
 
