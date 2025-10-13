@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import styles from './styles.module.css';
 
 export type PaginationVariant = 'primary' | 'secondary' | 'tertiary';
@@ -92,7 +93,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           disabled={isFirst}
           aria-label="First page"
         >
-          <img className={styles.icon} src="/icons/leftdisabled_outline_light_m.svg" alt="first" aria-hidden="true" />
+          <Image className={styles.icon} src="/icons/leftdisabled_outline_light_m.svg" alt="" width={24} height={24} aria-hidden />
         </button>
       )}
 
@@ -104,7 +105,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           disabled={isFirst}
           aria-label="Previous page"
         >
-          <img className={styles.icon} src="/icons/leftenable_outline_light_m.svg" alt="prev" aria-hidden="true" />
+          <Image className={styles.icon} src="/icons/leftenable_outline_light_m.svg" alt="" width={24} height={24} aria-hidden />
         </button>
       )}
 
@@ -138,7 +139,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           disabled={isLast}
           aria-label="Next page"
         >
-          <img className={styles.icon} src="/icons/rightenable_outline_light_m.svg" alt="next" aria-hidden="true" />
+          <Image className={styles.icon} src="/icons/rightenable_outline_light_m.svg" alt="" width={24} height={24} aria-hidden />
         </button>
       )}
 
@@ -150,7 +151,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           disabled={isLast}
           aria-label="Last page"
         >
-          <img className={styles.icon} src="/icons/rightdisabled_outline_light_m.svg" alt="last" aria-hidden="true" />
+          <Image className={styles.icon} src="/icons/rightdisabled_outline_light_m.svg" alt="" width={24} height={24} aria-hidden />
         </button>
       )}
     </div>
