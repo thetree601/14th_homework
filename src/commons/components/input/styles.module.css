@@ -1,0 +1,197 @@
+/**
+ * Input Component Styles
+ * Figma 디자인 기반 입력 필드 스타일 (Node ID: 3:1153 참조)
+ */
+
+/* Base Input Styles */
+.input {
+  /* 기본 스타일 리셋 */
+  border: none;
+  outline: none;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  
+  /* 폰트 스타일 (Figma 디자인 기준) */
+  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: -0.16px;
+  line-height: 24px;
+  
+  /* 기본 레이아웃 */
+  display: flex;
+  align-items: center;
+  width: 100%;
+  
+  /* 기본 색상 (light theme primary) */
+  background-color: #FFFFFF;
+  border: 1px solid #D4D3D3;
+  border-radius: 8px;
+  color: #1C1C1C;
+}
+
+.input::placeholder {
+  color: #ABABAB;
+}
+
+.input:focus {
+  border-color: #497CFF;
+}
+
+.input:disabled {
+  background-color: #F2F2F2;
+  border-color: #E4E4E4;
+  color: #ABABAB;
+  cursor: not-allowed;
+}
+
+.error {
+  border-color: #F03851;
+}
+
+.error:focus {
+  border-color: #F03851;
+}
+
+/* Variant Styles */
+.primary {
+  background-color: #FFFFFF;
+  border-color: #D4D3D3;
+}
+
+.primary:focus {
+  border-color: #497CFF;
+}
+
+.secondary {
+  background-color: #F2F2F2;
+  border-color: #C7C7C7;
+}
+
+.secondary:focus {
+  border-color: #3A5CF3;
+}
+
+.tertiary {
+  background-color: transparent;
+  border-color: #ABABAB;
+}
+
+.tertiary:focus {
+  border-color: #274AE1;
+}
+
+/* Size Styles */
+.small {
+  height: 36px;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: -0.14px;
+}
+
+.medium {
+  height: 48px;
+  padding: 12px 16px;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: -0.16px;
+}
+
+.large {
+  height: 56px;
+  padding: 16px 20px;
+  font-size: 18px;
+  line-height: 26px;
+  letter-spacing: -0.18px;
+}
+
+/* Theme Styles */
+.light {
+  background-color: #FFFFFF;
+  border-color: #D4D3D3;
+  color: #1C1C1C;
+}
+
+.light::placeholder {
+  color: #ABABAB;
+}
+
+.light:focus {
+  border-color: #497CFF;
+}
+
+.light:disabled {
+  background-color: #F2F2F2;
+  border-color: #E4E4E4;
+  color: #ABABAB;
+}
+
+.dark {
+  background-color: #1C1C1C;
+  border-color: #5F5F5F;
+  color: #FFFFFF;
+}
+
+.dark::placeholder {
+  color: #777777;
+}
+
+.dark:focus {
+  border-color: #6DA5FA;
+}
+
+.dark:disabled {
+  background-color: #333333;
+  border-color: #5F5F5F;
+  color: #777777;
+}
+
+/* Variant + Theme Combinations */
+.primary.light {
+  background-color: #FFFFFF;
+  border-color: #D4D3D3;
+}
+
+.primary.dark {
+  background-color: #333333;
+  border-color: #5F5F5F;
+}
+
+.secondary.light {
+  background-color: #F2F2F2;
+  border-color: #C7C7C7;
+}
+
+.secondary.dark {
+  background-color: #1C1C1C;
+  border-color: #777777;
+}
+
+.tertiary.light {
+  background-color: transparent;
+  border-color: #ABABAB;
+}
+
+.tertiary.dark {
+  background-color: transparent;
+  border-color: #777777;
+}
+
+/* Error State with Theme */
+.error.light {
+  border-color: #F03851;
+}
+
+.error.dark {
+  border-color: #F4677A;
+}
+
+.error.light:focus {
+  border-color: #F03851;
+}
+
+.error.dark:focus {
+  border-color: #F4677A;
+}
