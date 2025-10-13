@@ -92,11 +92,6 @@ export const coolGray = {
   '60': '#B0B3C4',
 } as const;
 
-// Gradient 색상
-export const gradient = {
-  primary: 'linear-gradient(135deg, #6DA5FA 0%, #92EAF5 100%)',
-  skeleton: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 48.5%, rgba(255,255,255,0) 100%)',
-} as const;
 
 // 다크모드 색상 (라이트모드와 다르게 적용될 색상들)
 export const darkMode = {
@@ -172,7 +167,6 @@ export const colors = {
   green,
   yellow,
   coolGray,
-  gradient,
   semantic,
   lightMode,
   darkMode,

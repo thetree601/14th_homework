@@ -129,10 +129,6 @@ const config: Config = {
           dark: "var(--warning-dark)",
         },
       },
-      backgroundImage: {
-        'gradient-primary': 'var(--gradient-primary)',
-        'gradient-skeleton': 'var(--gradient-skeleton)',
-      },
     },
   },
   plugins: [],
