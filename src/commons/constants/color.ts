@@ -1,386 +1,178 @@
 /**
- * Color Token System
- * 다크모드를 포함한 색상 토큰 정의
+ * Color Tokens
+ * 다크모드를 포함한 모든 색상을 토큰화하여 관리
  */
 
-// 기본 색상 팔레트
-export const colorPalette = {
-  // Primary Colors
+// Blue 색상 팔레트
+export const blue = {
+  '05': '#F0F7FF',
+  '10': '#DBEEFF',
+  '20': '#BDDBFF',
+  '30': '#93BEFF',
+  '40': '#6DA5FA', // System color
+  '50': '#497CFF',
+  '60': '#3A5CF3', // System color
+  '70': '#274AE1',
+  '80': '#1530A6',
+  '90': '#0B2184',
+} as const;
+
+// Gray 색상 팔레트
+export const gray = {
+  white: '#FFFFFF',
+  '05': '#F2F2F2',
+  '10': '#E4E4E4',
+  '20': '#D4D3D3',
+  '30': '#C7C7C7',
+  '40': '#ABABAB',
+  '50': '#919191',
+  '60': '#777777',
+  '70': '#5F5F5F',
+  '80': '#333333',
+  '90': '#1C1C1C',
+  black: '#000000',
+} as const;
+
+// Red 색상 팔레트
+export const red = {
+  '05': '#FDD7DC',
+  '10': '#F797A4',
+  '20': '#F4677A',
+  '30': '#F03851', // Error color
+  '40': '#E4112E',
+  '50': '#B40E24',
+  '60': '#850A1B',
+} as const;
+
+// Green 색상 팔레트
+export const green = {
+  '05': '#D3F3E0',
+  '10': '#92E6B9',
+  '20': '#15D66F',
+  '30': '#12B75F', // Success color
+  '40': '#109C51',
+  '50': '#0E723C',
+  '60': '#084424',
+} as const;
+
+// Yellow 색상 팔레트
+export const yellow = {
+  '05': '#FFE499',
+  '10': '#FFD666',
+  '20': '#FFC933',
+  '30': '#FFB300',
+  '40': '#EBA500',
+  '50': '#D69600',
+  '60': '#B27D00',
+} as const;
+
+// Cool Gray 색상 팔레트
+export const coolGray = {
+  '01': '#F8F8FA',
+  '05': '#F6F6F9',
+  '10': '#EDEEF2',
+  '20': '#DDDFE5',
+  '30': '#D2D4DD',
+  '40': '#C7C9D5',
+  '50': '#BBBECD',
+  '60': '#B0B3C4',
+} as const;
+
+// Gradient 색상
+export const gradient = {
+  primary: 'linear-gradient(135deg, #6DA5FA 0%, #92EAF5 100%)',
+  skeleton: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 48.5%, rgba(255,255,255,0) 100%)',
+} as const;
+
+// 다크모드 색상 (라이트모드와 다르게 적용될 색상들)
+export const darkMode = {
+  // 다크모드에서는 일반적으로 색상이 반전되거나 조정됨
+  background: {
+    primary: gray.black,
+    secondary: gray['90'],
+    tertiary: gray['80'],
+  },
+  text: {
+    primary: gray.white,
+    secondary: gray['10'],
+    tertiary: gray['30'],
+  },
+  border: {
+    primary: gray['70'],
+    secondary: gray['60'],
+  },
+} as const;
+
+// 라이트모드 색상
+export const lightMode = {
+  background: {
+    primary: gray.white,
+    secondary: gray['05'],
+    tertiary: gray['10'],
+  },
+  text: {
+    primary: gray.black,
+    secondary: gray['70'],
+    tertiary: gray['50'],
+  },
+  border: {
+    primary: gray['20'],
+    secondary: gray['10'],
+  },
+} as const;
+
+// 시맨틱 색상 (의미에 따른 색상)
+export const semantic = {
   primary: {
-    50: '#f0f9ff',
-    100: '#e0f2fe',
-    200: '#bae6fd',
-    300: '#7dd3fc',
-    400: '#38bdf8',
-    500: '#0ea5e9',
-    600: '#0284c7',
-    700: '#0369a1',
-    800: '#075985',
-    900: '#0c4a6e',
-    950: '#082f49',
+    light: blue['40'],
+    main: blue['50'],
+    dark: blue['60'],
   },
-  
-  // Secondary Colors
   secondary: {
-    50: '#f8fafc',
-    100: '#f1f5f9',
-    200: '#e2e8f0',
-    300: '#cbd5e1',
-    400: '#94a3b8',
-    500: '#64748b',
-    600: '#475569',
-    700: '#334155',
-    800: '#1e293b',
-    900: '#0f172a',
-    950: '#020617',
+    light: coolGray['20'],
+    main: coolGray['30'],
+    dark: coolGray['40'],
   },
-  
-  // Neutral Colors
-  neutral: {
-    50: '#fafafa',
-    100: '#f5f5f5',
-    200: '#e5e5e5',
-    300: '#d4d4d4',
-    400: '#a3a3a3',
-    500: '#737373',
-    600: '#525252',
-    700: '#404040',
-    800: '#262626',
-    900: '#171717',
-    950: '#0a0a0a',
-  },
-  
-  // Semantic Colors
   success: {
-    50: '#f0fdf4',
-    100: '#dcfce7',
-    200: '#bbf7d0',
-    300: '#86efac',
-    400: '#4ade80',
-    500: '#22c55e',
-    600: '#16a34a',
-    700: '#15803d',
-    800: '#166534',
-    900: '#14532d',
-    950: '#052e16',
+    light: green['20'],
+    main: green['30'],
+    dark: green['40'],
   },
-  
-  warning: {
-    50: '#fffbeb',
-    100: '#fef3c7',
-    200: '#fde68a',
-    300: '#fcd34d',
-    400: '#fbbf24',
-    500: '#f59e0b',
-    600: '#d97706',
-    700: '#b45309',
-    800: '#92400e',
-    900: '#78350f',
-    950: '#451a03',
-  },
-  
   error: {
-    50: '#fef2f2',
-    100: '#fee2e2',
-    200: '#fecaca',
-    300: '#fca5a5',
-    400: '#f87171',
-    500: '#ef4444',
-    600: '#dc2626',
-    700: '#b91c1c',
-    800: '#991b1b',
-    900: '#7f1d1d',
-    950: '#450a0a',
+    light: red['20'],
+    main: red['30'],
+    dark: red['40'],
   },
-  
-  info: {
-    50: '#eff6ff',
-    100: '#dbeafe',
-    200: '#bfdbfe',
-    300: '#93c5fd',
-    400: '#60a5fa',
-    500: '#3b82f6',
-    600: '#2563eb',
-    700: '#1d4ed8',
-    800: '#1e40af',
-    900: '#1e3a8a',
-    950: '#172554',
+  warning: {
+    light: yellow['20'],
+    main: yellow['30'],
+    dark: yellow['40'],
   },
 } as const;
 
-// 다크모드 색상 토큰
-export const colorTokens = {
-  light: {
-    // Background
-    background: {
-      primary: colorPalette.neutral[50],
-      secondary: colorPalette.neutral[100],
-      tertiary: colorPalette.neutral[200],
-      inverse: colorPalette.neutral[900],
-    },
-    
-    // Foreground
-    foreground: {
-      primary: colorPalette.neutral[900],
-      secondary: colorPalette.neutral[700],
-      tertiary: colorPalette.neutral[500],
-      inverse: colorPalette.neutral[50],
-    },
-    
-    // Border
-    border: {
-      primary: colorPalette.neutral[200],
-      secondary: colorPalette.neutral[300],
-      focus: colorPalette.primary[500],
-    },
-    
-    // Primary
-    primary: {
-      background: colorPalette.primary[500],
-      foreground: colorPalette.neutral[50],
-      hover: colorPalette.primary[600],
-      active: colorPalette.primary[700],
-    },
-    
-    // Secondary
-    secondary: {
-      background: colorPalette.secondary[100],
-      foreground: colorPalette.secondary[900],
-      hover: colorPalette.secondary[200],
-      active: colorPalette.secondary[300],
-    },
-    
-    // Semantic
-    success: {
-      background: colorPalette.success[50],
-      foreground: colorPalette.success[700],
-      border: colorPalette.success[200],
-    },
-    
-    warning: {
-      background: colorPalette.warning[50],
-      foreground: colorPalette.warning[700],
-      border: colorPalette.warning[200],
-    },
-    
-    error: {
-      background: colorPalette.error[50],
-      foreground: colorPalette.error[700],
-      border: colorPalette.error[200],
-    },
-    
-    info: {
-      background: colorPalette.info[50],
-      foreground: colorPalette.info[700],
-      border: colorPalette.info[200],
-    },
-  },
-  
-  dark: {
-    // Background
-    background: {
-      primary: colorPalette.neutral[950],
-      secondary: colorPalette.neutral[900],
-      tertiary: colorPalette.neutral[800],
-      inverse: colorPalette.neutral[50],
-    },
-    
-    // Foreground
-    foreground: {
-      primary: colorPalette.neutral[50],
-      secondary: colorPalette.neutral[300],
-      tertiary: colorPalette.neutral[500],
-      inverse: colorPalette.neutral[900],
-    },
-    
-    // Border
-    border: {
-      primary: colorPalette.neutral[800],
-      secondary: colorPalette.neutral[700],
-      focus: colorPalette.primary[400],
-    },
-    
-    // Primary
-    primary: {
-      background: colorPalette.primary[600],
-      foreground: colorPalette.neutral[50],
-      hover: colorPalette.primary[500],
-      active: colorPalette.primary[400],
-    },
-    
-    // Secondary
-    secondary: {
-      background: colorPalette.secondary[800],
-      foreground: colorPalette.secondary[100],
-      hover: colorPalette.secondary[700],
-      active: colorPalette.secondary[600],
-    },
-    
-    // Semantic
-    success: {
-      background: colorPalette.success[900],
-      foreground: colorPalette.success[100],
-      border: colorPalette.success[700],
-    },
-    
-    warning: {
-      background: colorPalette.warning[900],
-      foreground: colorPalette.warning[100],
-      border: colorPalette.warning[700],
-    },
-    
-    error: {
-      background: colorPalette.error[900],
-      foreground: colorPalette.error[100],
-      border: colorPalette.error[700],
-    },
-    
-    info: {
-      background: colorPalette.info[900],
-      foreground: colorPalette.info[100],
-      border: colorPalette.info[700],
-    },
-  },
-} as const;
-
-// CSS 변수용 색상 토큰 (Tailwind와 호환)
-export const cssColorTokens = {
-  // Light mode
-  '--color-background-primary': colorTokens.light.background.primary,
-  '--color-background-secondary': colorTokens.light.background.secondary,
-  '--color-background-tertiary': colorTokens.light.background.tertiary,
-  '--color-background-inverse': colorTokens.light.background.inverse,
-  
-  '--color-foreground-primary': colorTokens.light.foreground.primary,
-  '--color-foreground-secondary': colorTokens.light.foreground.secondary,
-  '--color-foreground-tertiary': colorTokens.light.foreground.tertiary,
-  '--color-foreground-inverse': colorTokens.light.foreground.inverse,
-  
-  '--color-border-primary': colorTokens.light.border.primary,
-  '--color-border-secondary': colorTokens.light.border.secondary,
-  '--color-border-focus': colorTokens.light.border.focus,
-  
-  '--color-primary-background': colorTokens.light.primary.background,
-  '--color-primary-foreground': colorTokens.light.primary.foreground,
-  '--color-primary-hover': colorTokens.light.primary.hover,
-  '--color-primary-active': colorTokens.light.primary.active,
-  
-  '--color-secondary-background': colorTokens.light.secondary.background,
-  '--color-secondary-foreground': colorTokens.light.secondary.foreground,
-  '--color-secondary-hover': colorTokens.light.secondary.hover,
-  '--color-secondary-active': colorTokens.light.secondary.active,
-  
-  '--color-success-background': colorTokens.light.success.background,
-  '--color-success-foreground': colorTokens.light.success.foreground,
-  '--color-success-border': colorTokens.light.success.border,
-  
-  '--color-warning-background': colorTokens.light.warning.background,
-  '--color-warning-foreground': colorTokens.light.warning.foreground,
-  '--color-warning-border': colorTokens.light.warning.border,
-  
-  '--color-error-background': colorTokens.light.error.background,
-  '--color-error-foreground': colorTokens.light.error.foreground,
-  '--color-error-border': colorTokens.light.error.border,
-  
-  '--color-info-background': colorTokens.light.info.background,
-  '--color-info-foreground': colorTokens.light.info.foreground,
-  '--color-info-border': colorTokens.light.info.border,
-} as const;
-
-// 다크모드 CSS 변수
-export const darkModeCssColorTokens = {
-  '--color-background-primary': colorTokens.dark.background.primary,
-  '--color-background-secondary': colorTokens.dark.background.secondary,
-  '--color-background-tertiary': colorTokens.dark.background.tertiary,
-  '--color-background-inverse': colorTokens.dark.background.inverse,
-  
-  '--color-foreground-primary': colorTokens.dark.foreground.primary,
-  '--color-foreground-secondary': colorTokens.dark.foreground.secondary,
-  '--color-foreground-tertiary': colorTokens.dark.foreground.tertiary,
-  '--color-foreground-inverse': colorTokens.dark.foreground.inverse,
-  
-  '--color-border-primary': colorTokens.dark.border.primary,
-  '--color-border-secondary': colorTokens.dark.border.secondary,
-  '--color-border-focus': colorTokens.dark.border.focus,
-  
-  '--color-primary-background': colorTokens.dark.primary.background,
-  '--color-primary-foreground': colorTokens.dark.primary.foreground,
-  '--color-primary-hover': colorTokens.dark.primary.hover,
-  '--color-primary-active': colorTokens.dark.primary.active,
-  
-  '--color-secondary-background': colorTokens.dark.secondary.background,
-  '--color-secondary-foreground': colorTokens.dark.secondary.foreground,
-  '--color-secondary-hover': colorTokens.dark.secondary.hover,
-  '--color-secondary-active': colorTokens.dark.secondary.active,
-  
-  '--color-success-background': colorTokens.dark.success.background,
-  '--color-success-foreground': colorTokens.dark.success.foreground,
-  '--color-success-border': colorTokens.dark.success.border,
-  
-  '--color-warning-background': colorTokens.dark.warning.background,
-  '--color-warning-foreground': colorTokens.dark.warning.foreground,
-  '--color-warning-border': colorTokens.dark.warning.border,
-  
-  '--color-error-background': colorTokens.dark.error.background,
-  '--color-error-foreground': colorTokens.dark.error.foreground,
-  '--color-error-border': colorTokens.dark.error.border,
-  
-  '--color-info-background': colorTokens.dark.info.background,
-  '--color-info-foreground': colorTokens.dark.info.foreground,
-  '--color-info-border': colorTokens.dark.info.border,
-} as const;
-
-// Tailwind CSS용 색상 토큰
-export const tailwindColors = {
-  // Background
-  'background-primary': 'var(--color-background-primary)',
-  'background-secondary': 'var(--color-background-secondary)',
-  'background-tertiary': 'var(--color-background-tertiary)',
-  'background-inverse': 'var(--color-background-inverse)',
-  
-  // Foreground
-  'foreground-primary': 'var(--color-foreground-primary)',
-  'foreground-secondary': 'var(--color-foreground-secondary)',
-  'foreground-tertiary': 'var(--color-foreground-tertiary)',
-  'foreground-inverse': 'var(--color-foreground-inverse)',
-  
-  // Border
-  'border-primary': 'var(--color-border-primary)',
-  'border-secondary': 'var(--color-border-secondary)',
-  'border-focus': 'var(--color-border-focus)',
-  
-  // Primary
-  'primary-background': 'var(--color-primary-background)',
-  'primary-foreground': 'var(--color-primary-foreground)',
-  'primary-hover': 'var(--color-primary-hover)',
-  'primary-active': 'var(--color-primary-active)',
-  
-  // Secondary
-  'secondary-background': 'var(--color-secondary-background)',
-  'secondary-foreground': 'var(--color-secondary-foreground)',
-  'secondary-hover': 'var(--color-secondary-hover)',
-  'secondary-active': 'var(--color-secondary-active)',
-  
-  // Semantic
-  'success-background': 'var(--color-success-background)',
-  'success-foreground': 'var(--color-success-foreground)',
-  'success-border': 'var(--color-success-border)',
-  
-  'warning-background': 'var(--color-warning-background)',
-  'warning-foreground': 'var(--color-warning-foreground)',
-  'warning-border': 'var(--color-warning-border)',
-  
-  'error-background': 'var(--color-error-background)',
-  'error-foreground': 'var(--color-error-foreground)',
-  'error-border': 'var(--color-error-border)',
-  
-  'info-background': 'var(--color-info-background)',
-  'info-foreground': 'var(--color-info-foreground)',
-  'info-border': 'var(--color-info-border)',
+// 전체 색상 객체
+export const colors = {
+  blue,
+  gray,
+  red,
+  green,
+  yellow,
+  coolGray,
+  gradient,
+  semantic,
+  lightMode,
+  darkMode,
 } as const;
 
 // 타입 정의
-export type ColorPalette = typeof colorPalette;
-export type ColorTokens = typeof colorTokens;
-export type CssColorTokens = typeof cssColorTokens;
-export type TailwindColors = typeof tailwindColors;
+export type ColorPalette = typeof colors;
+export type BlueColor = keyof typeof blue;
+export type GrayColor = keyof typeof gray;
+export type RedColor = keyof typeof red;
+export type GreenColor = keyof typeof green;
+export type YellowColor = keyof typeof yellow;
+export type CoolGrayColor = keyof typeof coolGray;
+export type SemanticColor = keyof typeof semantic;
+
+// 기본 export
+export default colors;

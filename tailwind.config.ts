@@ -9,55 +9,125 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Legacy colors for backward compatibility
+        // Background Colors
         background: "var(--background)",
+        "background-secondary": "var(--background-secondary)",
+        "background-tertiary": "var(--background-tertiary)",
+        
+        // Text Colors
         foreground: "var(--foreground)",
+        "foreground-secondary": "var(--foreground-secondary)",
+        "foreground-tertiary": "var(--foreground-tertiary)",
         
-        // Background colors
-        'bg-primary': "var(--color-background-primary)",
-        'bg-secondary': "var(--color-background-secondary)",
-        'bg-tertiary': "var(--color-background-tertiary)",
-        'bg-inverse': "var(--color-background-inverse)",
+        // Border Colors
+        border: "var(--border)",
+        "border-secondary": "var(--border-secondary)",
         
-        // Foreground colors
-        'fg-primary': "var(--color-foreground-primary)",
-        'fg-secondary': "var(--color-foreground-secondary)",
-        'fg-tertiary': "var(--color-foreground-tertiary)",
-        'fg-inverse': "var(--color-foreground-inverse)",
+        // Blue Colors
+        blue: {
+          "05": "var(--blue-05)",
+          "10": "var(--blue-10)",
+          "20": "var(--blue-20)",
+          "30": "var(--blue-30)",
+          "40": "var(--blue-40)",
+          "50": "var(--blue-50)",
+          "60": "var(--blue-60)",
+          "70": "var(--blue-70)",
+          "80": "var(--blue-80)",
+          "90": "var(--blue-90)",
+        },
         
-        // Border colors
-        'border-primary': "var(--color-border-primary)",
-        'border-secondary': "var(--color-border-secondary)",
-        'border-focus': "var(--color-border-focus)",
+        // Gray Colors
+        gray: {
+          white: "var(--gray-white)",
+          "05": "var(--gray-05)",
+          "10": "var(--gray-10)",
+          "20": "var(--gray-20)",
+          "30": "var(--gray-30)",
+          "40": "var(--gray-40)",
+          "50": "var(--gray-50)",
+          "60": "var(--gray-60)",
+          "70": "var(--gray-70)",
+          "80": "var(--gray-80)",
+          "90": "var(--gray-90)",
+          black: "var(--gray-black)",
+        },
         
-        // Primary colors
-        'primary-bg': "var(--color-primary-background)",
-        'primary-fg': "var(--color-primary-foreground)",
-        'primary-hover': "var(--color-primary-hover)",
-        'primary-active': "var(--color-primary-active)",
+        // Red Colors
+        red: {
+          "05": "var(--red-05)",
+          "10": "var(--red-10)",
+          "20": "var(--red-20)",
+          "30": "var(--red-30)",
+          "40": "var(--red-40)",
+          "50": "var(--red-50)",
+          "60": "var(--red-60)",
+        },
         
-        // Secondary colors
-        'secondary-bg': "var(--color-secondary-background)",
-        'secondary-fg': "var(--color-secondary-foreground)",
-        'secondary-hover': "var(--color-secondary-hover)",
-        'secondary-active': "var(--color-secondary-active)",
+        // Green Colors
+        green: {
+          "05": "var(--green-05)",
+          "10": "var(--green-10)",
+          "20": "var(--green-20)",
+          "30": "var(--green-30)",
+          "40": "var(--green-40)",
+          "50": "var(--green-50)",
+          "60": "var(--green-60)",
+        },
         
-        // Semantic colors
-        'success-bg': "var(--color-success-background)",
-        'success-fg': "var(--color-success-foreground)",
-        'success-border': "var(--color-success-border)",
+        // Yellow Colors
+        yellow: {
+          "05": "var(--yellow-05)",
+          "10": "var(--yellow-10)",
+          "20": "var(--yellow-20)",
+          "30": "var(--yellow-30)",
+          "40": "var(--yellow-40)",
+          "50": "var(--yellow-50)",
+          "60": "var(--yellow-60)",
+        },
         
-        'warning-bg': "var(--color-warning-background)",
-        'warning-fg': "var(--color-warning-foreground)",
-        'warning-border': "var(--color-warning-border)",
+        // Cool Gray Colors
+        "cool-gray": {
+          "01": "var(--cool-gray-01)",
+          "05": "var(--cool-gray-05)",
+          "10": "var(--cool-gray-10)",
+          "20": "var(--cool-gray-20)",
+          "30": "var(--cool-gray-30)",
+          "40": "var(--cool-gray-40)",
+          "50": "var(--cool-gray-50)",
+          "60": "var(--cool-gray-60)",
+        },
         
-        'error-bg': "var(--color-error-background)",
-        'error-fg': "var(--color-error-foreground)",
-        'error-border': "var(--color-error-border)",
+        // Semantic Colors
+        primary: {
+          light: "var(--primary-light)",
+          main: "var(--primary-main)",
+          dark: "var(--primary-dark)",
+        },
         
-        'info-bg': "var(--color-info-background)",
-        'info-fg': "var(--color-info-foreground)",
-        'info-border': "var(--color-info-border)",
+        secondary: {
+          light: "var(--secondary-light)",
+          main: "var(--secondary-main)",
+          dark: "var(--secondary-dark)",
+        },
+        
+        success: {
+          light: "var(--success-light)",
+          main: "var(--success-main)",
+          dark: "var(--success-dark)",
+        },
+        
+        error: {
+          light: "var(--error-light)",
+          main: "var(--error-main)",
+          dark: "var(--error-dark)",
+        },
+        
+        warning: {
+          light: "var(--warning-light)",
+          main: "var(--warning-main)",
+          dark: "var(--warning-dark)",
+        },
       },
     },
   },
