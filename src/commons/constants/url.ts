@@ -1,10 +1,9 @@
+import { AccessLevel } from './enum';
+
 /**
  * URL 경로 및 페이지 설정 관리
  * 다이나믹 라우팅을 지원하며, Link 컴포넌트에서 사용 가능하도록 설계됨
  */
-
-// 접근 권한 타입
-export type AccessLevel = 'anyone' | 'member';
 
 // 페이지 구성 요소 표시 여부
 export interface PageLayout {
@@ -51,7 +50,7 @@ export const PAGE_CONFIGS: Record<string, PageInfo> = {
   // 로그인 페이지
   [URLS.AUTH.LOGIN]: {
     path: URLS.AUTH.LOGIN,
-    accessLevel: 'anyone',
+    accessLevel: AccessLevel.Anyone,
     layout: {
       header: {
         visible: false,
@@ -67,7 +66,7 @@ export const PAGE_CONFIGS: Record<string, PageInfo> = {
   // 회원가입 페이지
   [URLS.AUTH.SIGNUP]: {
     path: URLS.AUTH.SIGNUP,
-    accessLevel: 'anyone',
+    accessLevel: AccessLevel.Anyone,
     layout: {
       header: {
         visible: false,
@@ -83,7 +82,7 @@ export const PAGE_CONFIGS: Record<string, PageInfo> = {
   // 일기 목록 페이지
   [URLS.DIARIES.LIST]: {
     path: URLS.DIARIES.LIST,
-    accessLevel: 'anyone',
+    accessLevel: AccessLevel.Anyone,
     layout: {
       header: {
         visible: true,
@@ -99,7 +98,7 @@ export const PAGE_CONFIGS: Record<string, PageInfo> = {
   // 일기 상세 페이지 (템플릿)
   [URLS.DIARIES.DETAIL_TEMPLATE]: {
     path: URLS.DIARIES.DETAIL_TEMPLATE,
-    accessLevel: 'member',
+    accessLevel: AccessLevel.Member,
     layout: {
       header: {
         visible: true,
@@ -115,7 +114,7 @@ export const PAGE_CONFIGS: Record<string, PageInfo> = {
   // 사진 목록 페이지
   [URLS.PICTURES.LIST]: {
     path: URLS.PICTURES.LIST,
-    accessLevel: 'anyone',
+    accessLevel: AccessLevel.Anyone,
     layout: {
       header: {
         visible: true,
@@ -155,8 +154,8 @@ export const urlUtils = {
     const config = urlUtils.getPageConfig(path);
     if (!config) return false;
     
-    return config.accessLevel === 'anyone' || 
-           (config.accessLevel === 'member' && isLoggedIn);
+    return config.accessLevel === AccessLevel.Anyone || 
+           (config.accessLevel === AccessLevel.Member && isLoggedIn);
   },
   
   /**
@@ -164,7 +163,7 @@ export const urlUtils = {
    */
   requiresAuth: (path: string): boolean => {
     const config = urlUtils.getPageConfig(path);
-    return config?.accessLevel === 'member' || false;
+    return config?.accessLevel === AccessLevel.Member || false;
   },
   
   /**

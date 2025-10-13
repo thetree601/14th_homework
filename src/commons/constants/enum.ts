@@ -70,6 +70,14 @@ export const EMOTIONS: Emotion[] = [
   Emotion.Etc,
 ];
 
+// 접근 권한 레벨
+export enum AccessLevel {
+  Anyone = 'anyone',
+  Member = 'member',
+}
+
+export type AccessLevelKey = keyof typeof AccessLevel;
+
 export default Emotion;
 
 
