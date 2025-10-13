@@ -174,5 +174,13 @@ export type YellowColor = keyof typeof yellow;
 export type CoolGrayColor = keyof typeof coolGray;
 export type SemanticColor = keyof typeof semantic;
 
+// 색상 값 타입
+export type ColorValue = string;
+
+// 색상 팔레트 타입
+export type ColorPaletteType = {
+  [K in string]: ColorValue | { [K2 in string]: ColorValue };
+};
+
 // 기본 export
 export default colors;
