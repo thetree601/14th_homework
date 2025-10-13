@@ -396,154 +396,314 @@ export const typography = {
   },
   english: {
     mobile: {
-      // 헤딩 스타일
-      h1: {
-        fontSize: fontSize.mobile['6xl'],
-        fontWeight: fontWeight.bold,
-        lineHeight: lineHeight.tight,
+      // Web Headline 스타일 (영문용 - 한국어와 동일한 크기, SUIT Variable 폰트)
+      webHeadline01: {
+        fontSize: '48px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '60px',
         letterSpacing: letterSpacing.tighter,
         fontFamily: fontFamily.english.primary,
       },
-      h2: {
-        fontSize: fontSize.mobile['5xl'],
-        fontWeight: fontWeight.bold,
-        lineHeight: lineHeight.tight,
+      webHeadline02: {
+        fontSize: '36px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '48px',
         letterSpacing: letterSpacing.tighter,
         fontFamily: fontFamily.english.primary,
       },
-      h3: {
-        fontSize: fontSize.mobile['4xl'],
+      webHeadline03: {
+        fontSize: '28px',
         fontWeight: fontWeight.semibold,
-        lineHeight: lineHeight.snug,
+        lineHeight: '36px',
         letterSpacing: letterSpacing.tight,
         fontFamily: fontFamily.english.primary,
       },
-      h4: {
-        fontSize: fontSize.mobile['3xl'],
-        fontWeight: fontWeight.semibold,
-        lineHeight: lineHeight.snug,
+      // Headline 스타일 (영문용)
+      headline01: {
+        fontSize: '24px',
+        fontWeight: fontWeight.bold,
+        lineHeight: '32px',
         letterSpacing: letterSpacing.tight,
         fontFamily: fontFamily.english.primary,
       },
-      h5: {
-        fontSize: fontSize.mobile['2xl'],
+      headline02: {
+        fontSize: '22px',
+        fontWeight: fontWeight.extrabold,
+        lineHeight: '30px',
+        letterSpacing: letterSpacing.tight,
+        fontFamily: fontFamily.english.primary,
+      },
+      headline03: {
+        fontSize: '20px',
+        fontWeight: fontWeight.bold,
+        lineHeight: '28px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      // Title 스타일 (영문용)
+      title01: {
+        fontSize: '18px',
+        fontWeight: fontWeight.bold,
+        lineHeight: '24px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      title02: {
+        fontSize: '16px',
+        fontWeight: fontWeight.bold,
+        lineHeight: '22px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      title03: {
+        fontSize: '14px',
+        fontWeight: fontWeight.bold,
+        lineHeight: '20px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      subtitle01: {
+        fontSize: '14px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '22px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      subtitle02: {
+        fontSize: '12px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '18px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      // Body 스타일 (영문용 - 더 넓은 줄간격)
+      body01: {
+        fontSize: '16px',
         fontWeight: fontWeight.medium,
-        lineHeight: lineHeight.normal,
+        lineHeight: '26px',
         letterSpacing: letterSpacing.normal,
         fontFamily: fontFamily.english.primary,
       },
-      h6: {
-        fontSize: fontSize.mobile.xl,
+      body02: {
+        fontSize: '14px',
         fontWeight: fontWeight.medium,
-        lineHeight: lineHeight.normal,
+        lineHeight: '24px',
         letterSpacing: letterSpacing.normal,
         fontFamily: fontFamily.english.primary,
       },
-      // 본문 스타일
-      body1: {
-        fontSize: fontSize.mobile.base,
-        fontWeight: fontWeight.normal,
-        lineHeight: lineHeight.relaxed,
-        letterSpacing: letterSpacing.normal,
-        fontFamily: fontFamily.english.primary,
-      },
-      body2: {
-        fontSize: fontSize.mobile.sm,
-        fontWeight: fontWeight.normal,
-        lineHeight: lineHeight.relaxed,
-        letterSpacing: letterSpacing.normal,
-        fontFamily: fontFamily.english.primary,
-      },
-      // 캡션 및 작은 텍스트
-      caption: {
-        fontSize: fontSize.mobile.xs,
-        fontWeight: fontWeight.normal,
-        lineHeight: lineHeight.normal,
-        letterSpacing: letterSpacing.normal,
-        fontFamily: fontFamily.english.primary,
-      },
-      // 버튼 텍스트
-      button: {
-        fontSize: fontSize.mobile.base,
+      body03: {
+        fontSize: '12px',
         fontWeight: fontWeight.medium,
-        lineHeight: lineHeight.none,
-        letterSpacing: letterSpacing.wide,
+        lineHeight: '20px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      // Body Regular 스타일 (영문용)
+      bodyRegular01: {
+        fontSize: '16px',
+        fontWeight: fontWeight.normal,
+        lineHeight: '24px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      bodyRegular02: {
+        fontSize: '14px',
+        fontWeight: fontWeight.normal,
+        lineHeight: '22px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      bodyRegular03: {
+        fontSize: '12px',
+        fontWeight: fontWeight.normal,
+        lineHeight: '18px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      // Caption 스타일 (영문용)
+      caption01: {
+        fontSize: '12px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '16px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      caption02: {
+        fontSize: '10px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '14px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      caption03: {
+        fontSize: '8px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '12px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      // Caption Medium 스타일 (영문용)
+      captionMedium: {
+        fontSize: '10px',
+        fontWeight: fontWeight.medium,
+        lineHeight: '14px',
+        letterSpacing: letterSpacing.normal,
         fontFamily: fontFamily.english.primary,
       },
     },
     desktop: {
-      // 헤딩 스타일
-      h1: {
-        fontSize: fontSize.desktop['6xl'],
-        fontWeight: fontWeight.bold,
-        lineHeight: lineHeight.tight,
+      // Web Headline 스타일 (영문용 - Desktop은 Mobile과 동일)
+      webHeadline01: {
+        fontSize: '48px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '60px',
         letterSpacing: letterSpacing.tighter,
         fontFamily: fontFamily.english.primary,
       },
-      h2: {
-        fontSize: fontSize.desktop['5xl'],
-        fontWeight: fontWeight.bold,
-        lineHeight: lineHeight.tight,
+      webHeadline02: {
+        fontSize: '36px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '48px',
         letterSpacing: letterSpacing.tighter,
         fontFamily: fontFamily.english.primary,
       },
-      h3: {
-        fontSize: fontSize.desktop['4xl'],
+      webHeadline03: {
+        fontSize: '28px',
         fontWeight: fontWeight.semibold,
-        lineHeight: lineHeight.snug,
+        lineHeight: '36px',
         letterSpacing: letterSpacing.tight,
         fontFamily: fontFamily.english.primary,
       },
-      h4: {
-        fontSize: fontSize.desktop['3xl'],
-        fontWeight: fontWeight.semibold,
-        lineHeight: lineHeight.snug,
+      // Headline 스타일 (영문용)
+      headline01: {
+        fontSize: '24px',
+        fontWeight: fontWeight.bold,
+        lineHeight: '32px',
         letterSpacing: letterSpacing.tight,
         fontFamily: fontFamily.english.primary,
       },
-      h5: {
-        fontSize: fontSize.desktop['2xl'],
+      headline02: {
+        fontSize: '22px',
+        fontWeight: fontWeight.extrabold,
+        lineHeight: '30px',
+        letterSpacing: letterSpacing.tight,
+        fontFamily: fontFamily.english.primary,
+      },
+      headline03: {
+        fontSize: '20px',
+        fontWeight: fontWeight.bold,
+        lineHeight: '28px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      // Title 스타일 (영문용)
+      title01: {
+        fontSize: '18px',
+        fontWeight: fontWeight.bold,
+        lineHeight: '24px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      title02: {
+        fontSize: '16px',
+        fontWeight: fontWeight.bold,
+        lineHeight: '22px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      title03: {
+        fontSize: '14px',
+        fontWeight: fontWeight.bold,
+        lineHeight: '20px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      subtitle01: {
+        fontSize: '14px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '22px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      subtitle02: {
+        fontSize: '12px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '18px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      // Body 스타일 (영문용 - 더 넓은 줄간격)
+      body01: {
+        fontSize: '16px',
         fontWeight: fontWeight.medium,
-        lineHeight: lineHeight.normal,
+        lineHeight: '26px',
         letterSpacing: letterSpacing.normal,
         fontFamily: fontFamily.english.primary,
       },
-      h6: {
-        fontSize: fontSize.desktop.xl,
+      body02: {
+        fontSize: '14px',
         fontWeight: fontWeight.medium,
-        lineHeight: lineHeight.normal,
+        lineHeight: '24px',
         letterSpacing: letterSpacing.normal,
         fontFamily: fontFamily.english.primary,
       },
-      // 본문 스타일
-      body1: {
-        fontSize: fontSize.desktop.base,
-        fontWeight: fontWeight.normal,
-        lineHeight: lineHeight.relaxed,
-        letterSpacing: letterSpacing.normal,
-        fontFamily: fontFamily.english.primary,
-      },
-      body2: {
-        fontSize: fontSize.desktop.sm,
-        fontWeight: fontWeight.normal,
-        lineHeight: lineHeight.relaxed,
-        letterSpacing: letterSpacing.normal,
-        fontFamily: fontFamily.english.primary,
-      },
-      // 캡션 및 작은 텍스트
-      caption: {
-        fontSize: fontSize.desktop.xs,
-        fontWeight: fontWeight.normal,
-        lineHeight: lineHeight.normal,
-        letterSpacing: letterSpacing.normal,
-        fontFamily: fontFamily.english.primary,
-      },
-      // 버튼 텍스트
-      button: {
-        fontSize: fontSize.desktop.base,
+      body03: {
+        fontSize: '12px',
         fontWeight: fontWeight.medium,
-        lineHeight: lineHeight.none,
-        letterSpacing: letterSpacing.wide,
+        lineHeight: '20px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      // Body Regular 스타일 (영문용)
+      bodyRegular01: {
+        fontSize: '16px',
+        fontWeight: fontWeight.normal,
+        lineHeight: '24px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      bodyRegular02: {
+        fontSize: '14px',
+        fontWeight: fontWeight.normal,
+        lineHeight: '22px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      bodyRegular03: {
+        fontSize: '12px',
+        fontWeight: fontWeight.normal,
+        lineHeight: '18px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      // Caption 스타일 (영문용)
+      caption01: {
+        fontSize: '12px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '16px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      caption02: {
+        fontSize: '10px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '14px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      caption03: {
+        fontSize: '8px',
+        fontWeight: fontWeight.semibold,
+        lineHeight: '12px',
+        letterSpacing: letterSpacing.normal,
+        fontFamily: fontFamily.english.primary,
+      },
+      // Caption Medium 스타일 (영문용)
+      captionMedium: {
+        fontSize: '10px',
+        fontWeight: fontWeight.medium,
+        lineHeight: '14px',
+        letterSpacing: letterSpacing.normal,
         fontFamily: fontFamily.english.primary,
       },
     },
