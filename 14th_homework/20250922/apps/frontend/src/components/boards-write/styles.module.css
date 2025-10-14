@@ -1,0 +1,256 @@
+/* 게시글 작성/수정 페이지 스타일 */
+
+/* 컨테이너 */
+.contentContainer {
+  width: 100%;
+  max-width: 768px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 32px;
+}
+
+/* 제목 */
+.postTitle {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 767px) {
+  .postTitle {
+    font-size: 20px;
+  }
+}
+
+/* 폼 그룹 */
+.formGroup {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.formGroup:lastOfType {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.formGroup.firstGroup {
+  padding-top: 24px;
+}
+
+.formRowGroup {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+}
+
+/* 라벨 */
+.labelRequired::after {
+  content: "*";
+  color: #f26d21;
+  margin-left: 4px;
+}
+
+/* 입력 필드 */
+.inputField,
+.textareaField {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.inputField:focus,
+.textareaField:focus {
+  border-color: #f26d21;
+}
+
+.textareaField {
+  resize: vertical;
+  min-height: 200px;
+}
+
+/* 버튼 */
+.button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+}
+
+.button.primary {
+  background-color: #4b5563;
+  color: #bdbdbd;
+}
+
+.button.secondary {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #000000;
+}
+
+/* 버튼 컨테이너 */
+.buttonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 32px;
+}
+
+.buttonContainer .button {
+  margin-left: 8px;
+}
+
+/* 에러 메시지 */
+.errorMessage {
+  color: #f00;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* 파일 업로드 */
+.fileUploadGrid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.fileUploadBox {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: 8px;
+  height: 120px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+  width: 120px;
+  background-color: #f8f8f8;
+}
+
+.fileUploadBox:hover {
+  background-color: #f0f0f0;
+}
+
+.fileUploadBox svg {
+  margin-bottom: 8px;
+  color: #999;
+}
+
+.fileUploadBox span {
+  color: #777;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 유틸리티 클래스 */
+.flex1 {
+  flex: 1;
+}
+
+.flexGap8 {
+  display: flex;
+  gap: 8px;
+}
+
+.mb8 {
+  margin-bottom: 8px;
+}
+
+.w120 {
+  width: 120px;
+}
+
+.noBorder {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* 버튼 상태별 클래스 */
+.buttonEnabled { 
+  background-color: var(--color-primary); 
+  color: #fff; 
+  cursor: pointer; 
+}
+
+.buttonDisabled { 
+  background-color: var(--color-disabled-bg); 
+  color: var(--color-disabled-text); 
+  cursor: not-allowed; 
+}
+
+/* 우편번호 검색 모달 스타일 */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: white;
+  border-radius: var(--border-radius-md);
+  padding: 0;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-background-light);
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm);
+  transition: background-color 0.2s ease;
+}
+
+.closeButton:hover {
+  background-color: var(--color-background-hover);
+}
+

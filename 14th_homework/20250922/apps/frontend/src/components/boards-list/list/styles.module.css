@@ -1,0 +1,27 @@
+/* Container */
+.container { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji"; color: var(--color-text-primary); background: var(--color-surface); padding: 0; border-radius: var(--radius-md); box-shadow: 0 1px 2px rgba(0,0,0,0.04); max-width: 64rem; margin: 0 auto; }
+.inner { display: flex; flex-direction: column; min-height: 500px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); }
+.title { font-size: 30px; font-weight: var(--font-weight-bold); color: #111827; }
+.newButton { display: inline-block; padding: 8px 24px; border-radius: 9999px; font-weight: 600; color: #fff; background: var(--color-primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: background-color .2s ease; }
+.newButton:hover { background: #ea5e0d; }
+
+/* Table */
+.tableWrap { overflow-x: auto; border-radius: var(--radius-md); box-shadow: 0 1px 2px rgba(0,0,0,0.04); border: 1px solid var(--color-border); }
+.table { min-width: 100%; background: #fff; border-collapse: collapse; }
+.thead { background: #f3f4f6; }
+.th { padding: 12px 24px; text-align: left; font-size: 12px; font-weight: 600; color: #4b5563; text-transform: uppercase; letter-spacing: .05em; }
+.th:first-child { border-top-left-radius: var(--radius-md); }
+.th:last-child { border-top-right-radius: var(--radius-md); }
+.tr { transition: background-color .15s ease; }
+.tr:hover { background: #f9fafb; }
+.td { padding: 16px 24px; white-space: nowrap; font-size: 14px; color: #111827; }
+.tdMuted { color: #6b7280; }
+.link { color: #2563eb; font-weight: 500; transition: color .2s ease; }
+.link:hover { color: #1e40af; }
+.deleteCell { text-align: center; position: relative; }
+.deleteButton { padding: 4px; border-radius: 9999px; color: #ef4444; transition: background-color .2s ease, opacity .2s ease; opacity: 0; }
+.tr:hover .deleteButton { opacity: 1; }
+.deleteButton:hover { background: #fee2e2; }
+.deleteIcon { width: 20px; height: 20px; }
+

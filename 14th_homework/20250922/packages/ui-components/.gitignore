@@ -11,9 +11,6 @@ pnpm-lock.yaml
 .pnp.js
 .yarn/install-state.gz
 
-# 모든 하위 폴더의 node_modules도 무시
-**/node_modules
-
 # testing
 /coverage
 

@@ -1,0 +1,29 @@
+.newContainer {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .newContainer input, .newContainer button {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .newContainer button {
+    background-color: #0070f3;
+    color: white;
+    cursor: pointer;
+  }
+  
+  .newContainer button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .error {
+    color: red;
+    margin-top: 10px;
+  }

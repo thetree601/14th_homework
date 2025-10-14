@@ -1,0 +1,56 @@
+.paginationContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+  }
+  
+  .paginationButton {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 9999px;
+    background-color: rgb(229, 231, 235);
+    color: rgb(55, 65, 81);
+    transition-property: background-color;
+    transition-duration: 150ms;
+  }
+  
+  .paginationButton:hover {
+    background-color: rgb(209, 213, 219);
+  }
+  
+  .paginationButton[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .pageNumber {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 9999px;
+    font-weight: 700;
+    color: rgb(55, 65, 81);
+    transition-property: background-color, color;
+    transition-duration: 150ms;
+  }
+  
+  .pageNumber:hover {
+    background-color: rgb(238, 242, 255);
+  }
+  
+  .activePage {
+    background-color: rgb(99, 102, 241);
+    color: #fff;
+  }
+  
+  .activePage:hover {
+    background-color: rgb(79, 70, 229);
+  }
+  

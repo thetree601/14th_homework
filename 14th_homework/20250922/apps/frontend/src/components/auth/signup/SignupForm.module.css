@@ -1,0 +1,171 @@
+/* 회원가입 컨테이너 */
+.signupContainer {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* 회원가입 폼 영역 (좌측) */
+.signupForm {
+  flex: 0 0 40%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 40px;
+  background-color: #ffffff;
+  min-height: 100vh;
+}
+
+/* 제목 */
+.title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #000000;
+  margin-bottom: 16px;
+  text-align: center;
+  font-family: "Pretendard", sans-serif;
+}
+
+/* 안내 메시지 */
+.instruction {
+  font-size: 16px;
+  color: #666666;
+  margin-bottom: 40px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* 폼 스타일 */
+.form {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* 입력 그룹 */
+.inputGroup {
+  margin-bottom: 24px;
+}
+
+/* 라벨 */
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333333;
+  margin-bottom: 8px;
+  font-family: "Pretendard", sans-serif;
+}
+
+/* 필수 표시 */
+.required {
+  color: #ff6b35;
+}
+
+/* 입력 필드 */
+.input {
+  width: 100%;
+  padding: 16px 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: "Pretendard", sans-serif;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.input::placeholder {
+  color: #999999;
+}
+
+/* 에러 상태 입력 필드 */
+.inputError {
+  border-color: #ff6b35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+/* 에러 메시지 */
+.errorMessage {
+  color: #ff6b35;
+  font-size: 14px;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* 회원가입 버튼 */
+.signupButton {
+  width: 100%;
+  padding: 16px 20px;
+  background-color: #007bff;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: "Pretendard", sans-serif;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+  margin-bottom: 20px;
+}
+
+.signupButton:hover:not(:disabled) {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.signupButton:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 로그인 버튼 */
+.loginButton {
+  width: 100%;
+  padding: 16px 20px;
+  background-color: transparent;
+  color: #000000;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: "Pretendard", sans-serif;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.loginButton:hover {
+  background-color: #f8f9fa;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .signupContainer {
+    flex-direction: column;
+  }
+  
+  .signupForm {
+    flex: 1;
+    min-height: auto;
+    padding: 40px 20px;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+  
+  .instruction {
+    font-size: 14px;
+  }
+  
+  .form {
+    max-width: 100%;
+  }
+}

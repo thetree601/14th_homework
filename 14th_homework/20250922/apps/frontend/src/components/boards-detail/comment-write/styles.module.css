@@ -1,0 +1,105 @@
+/* 댓글 작성 컴포넌트 스타일 */
+
+.contentContainer {
+  width: 100%;
+  max-width: 768px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 32px;
+}
+
+.postTitle {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 767px) {
+  .postTitle {
+    font-size: 20px;
+  }
+}
+
+.formGroup {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.formGroup:lastOfType {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.formGroup.firstGroup {
+  padding-top: 24px;
+}
+
+.formRowGroup {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+}
+
+.flex1 {
+  flex: 1;
+}
+
+.labelRequired::after {
+  content: "*";
+  color: #f26d21;
+  margin-left: 4px;
+}
+
+.inputField,
+.textareaField {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.inputField:focus,
+.textareaField:focus {
+  border-color: #f26d21;
+}
+
+.textareaField {
+  resize: vertical;
+  min-height: 200px;
+}
+
+.button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+}
+
+.button.primary {
+  background-color: #4b5563;
+  color: #bdbdbd;
+}
+
+.button.secondary {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #000000;
+}
+
+.noBorder {
+  border-bottom: none;
+  padding-bottom: 0;
+}
