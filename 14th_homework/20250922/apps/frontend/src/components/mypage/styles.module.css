@@ -1,0 +1,306 @@
+/* LifeCompass My Page theme: calm, reflective, warm */
+
+.root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 20px 88px;
+  background: radial-gradient(1200px 800px at 80% -10%, rgba(255, 222, 173, 0.06) 0%, rgba(255, 222, 173, 0) 60%),
+    linear-gradient(180deg, #0b132b 0%, #101b3b 50%, #1b224c 100%);
+  color: #e9e1d4; /* warm beige */
+  font-family: var(--font-pretendard, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji");
+}
+
+.container {
+  width: 100%;
+  max-width: 1040px;
+  min-height: calc(100dvh - 160px);
+  display: flex;
+}
+
+.header { display: none; }
+
+.headerRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  align-items: center;
+}
+
+.greeting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-size: 28px;
+  line-height: 1.25;
+  letter-spacing: 0.2px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #e9e1d4cc;
+}
+
+.compassWrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 9999px;
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.18), rgba(255, 215, 0, 0));
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 215, 0, 0.15);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+  flex: 1;
+  align-content: start;
+}
+
+.card {
+  background: rgba(15, 21, 45, 0.6);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 215, 0, 0.08);
+  padding: 20px;
+  opacity: 0;
+  min-height: 140px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.cardTitle {
+  font-size: 16px;
+  color: #f3e9d1;
+  letter-spacing: 0.4px;
+}
+
+.quote {
+  margin: 6px 0 0;
+  font-size: 18px;
+  line-height: 1.6;
+  color: #f0eadc;
+}
+
+.quoteAuthor {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 13px;
+  color: #ddcfb9;
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 215, 0, 0.08);
+  color: #efdca8;
+  border: 1px solid rgba(255, 215, 0, 0.18);
+  font-size: 13px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.listItem {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 215, 0, 0.08);
+}
+
+.question {
+  color: #f0eadc;
+  font-size: 14px;
+}
+
+.meta {
+  color: #ddcfb9;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.progressLabel {
+  color: #efdca8;
+  font-size: 13px;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 215, 0, 0.12);
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: linear-gradient(90deg, #b08b2e, #d4af37);
+}
+
+.progressNote {
+  margin-top: 10px;
+  color: #e9e1d4cc;
+  font-size: 13px;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.timelineItem {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.timelineDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #d4af37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.timelineBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timelineTitle {
+  font-size: 14px;
+  color: #f3e9d1;
+}
+
+.timelineNote {
+  font-size: 12px;
+  color: #ddcfb9;
+}
+
+.timelineDate {
+  font-size: 12px;
+  color: #ddcfb9;
+}
+
+.quickRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.quickBtn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 215, 0, 0.18);
+  background: rgba(255, 215, 0, 0.08);
+  color: #efdca8;
+  cursor: pointer;
+}
+
+.nextBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nextText {
+  color: #f3e9d1;
+}
+
+.nextCta {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #b08b2e, #d4af37);
+  color: #0b132b;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.nav {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 21, 45, 0.7);
+  border: 1px solid rgba(255, 215, 0, 0.12);
+  border-radius: 999px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+}
+
+.navList {
+  display: flex;
+  gap: 2px;
+  padding: 8px;
+}
+
+.navItem {
+  padding: 10px 16px;
+  color: #e9e1d4;
+  border-radius: 999px;
+}
+
+.navItemActive {
+  background: rgba(255, 215, 0, 0.15);
+  color: #f8e9b0;
+  border: 1px solid rgba(255, 215, 0, 0.25);
+}
+
+/* Responsive */
+@media (max-width: 880px) {
+  .headerRow {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Simple fade-in for cards (will be triggered by Framer Motion as well) */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.appear {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+
