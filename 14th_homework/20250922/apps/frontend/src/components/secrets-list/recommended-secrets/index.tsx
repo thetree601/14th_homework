@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Secret } from "../types";
 import styles from "./styles.module.css";
 
@@ -17,8 +18,13 @@ export default function RecommendedSecrets({ secrets }: RecommendedSecretsProps)
   return (
     <section className={styles.recommendedSecretsSection}>
       <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>🕵️ 당신이 알고 싶을만한 비밀들</h2>
-        <p className={styles.sectionSubtitle}>당신의 취향을 분석한 맞춤 추천</p>
+        <div className={styles.headerTexts}>
+          <h2 className={styles.sectionTitle}>🕵️ 당신이 알고 싶을만한 비밀들</h2>
+          <p className={styles.sectionSubtitle}>당신의 취향을 분석한 맞춤 추천</p>
+        </div>
+        <Link href="/secrets/new" className={styles.ctaButton}>
+          비밀 판매하기
+        </Link>
       </div>
 
       <div className={styles.secretsGrid}>
