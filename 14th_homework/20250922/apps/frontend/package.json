@@ -20,8 +20,10 @@
     "@hookform/resolvers": "^5.2.2",
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.2",
+    "@portone/browser-sdk": "^0.1.1",
     "@supabase/supabase-js": "^2.57.4",
     "@triptalk/ui-components": "workspace:*",
+    "@types/uuid": "^11.0.0",
     "antd": "~5.20.6",
     "apollo-upload-client": "^18.0.1",
     "dayjs": "^1.11.18",
@@ -36,6 +38,7 @@
     "react-infinite-scroll-component": "~6.1.0",
     "react-youtube": "^10.1.0",
     "swiper": "^11.2.10",
+    "uuid": "^13.0.0",
     "zod": "^4.1.11",
     "zustand": "^5.0.8"
   },

@@ -20,7 +20,7 @@ const nextConfig = {
     return [
       {
         source: '/api/graphql',
-        destination: 'http://main-practice.codebootcamp.co.kr/graphql',
+        destination: 'https://main-practice.codebootcamp.co.kr/graphql',
       },
     ];
   },

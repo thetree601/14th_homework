@@ -2,9 +2,34 @@
 
 import React from "react";
 import Link from "next/link";
+import { useModal } from "@/commons/providers/modal/modal.provider";
+import { authManager } from "@/lib/auth";
+import LoginModal from "@/components/secrets-list/modals/LoginModal";
 import styles from "./styles.module.css";
 
 export default function SecretsNew() {
+  const { openModal, closeModal } = useModal();
+
+  const handleSubmit = () => {
+    // 로그인 상태 확인
+    authManager.initializeToken();
+    if (!authManager.isLoggedIn()) {
+      openModal(
+        <LoginModal
+          onCancel={closeModal}
+          onSuccess={() => {
+            closeModal();
+            alert("로그인 후 비밀을 등록할 수 있습니다.");
+          }}
+        />
+      );
+      return;
+    }
+
+    // TODO: 실제 등록 API 호출
+    console.log("비밀 등록하기");
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -79,7 +104,7 @@ export default function SecretsNew() {
 
         <div className={styles.actions}>
           <Link href="/secrets" className={styles.ghostButton}>취소</Link>
-          <button className={styles.primaryButton} type="button">등록하기</button>
+          <button className={styles.primaryButton} type="button" onClick={handleSubmit}>등록하기</button>
         </div>
       </section>
     </div>
