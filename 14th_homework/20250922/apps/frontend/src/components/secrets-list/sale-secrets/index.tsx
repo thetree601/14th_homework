@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { Secret } from "../types";
+import { usePaymentSubscription } from "@/app/payments/hooks/index.payment.hook";
 import styles from "./styles.module.css";
 
 interface SaleSecretsProps {
@@ -10,13 +11,32 @@ interface SaleSecretsProps {
 }
 
 export default function SaleSecrets({ secrets }: SaleSecretsProps) {
+  const { isProcessing, subscribe } = usePaymentSubscription();
+
   const formatPrice = (price: number) => {
     return `₩${price.toLocaleString()}`;
+  };
+
+  const handleSubscribe = async () => {
+    console.log("구독하기 버튼 클릭됨");
+    try {
+      await subscribe("구독 결제", 10000);
+    } catch (error) {
+      console.error("구독하기 처리 중 오류:", error);
+    }
   };
 
   return (
     <section className={styles.saleSecretsSection}>
       <div className={styles.sectionHeader}>
+        <button 
+          className={styles.subscribeButton}
+          onClick={handleSubscribe}
+          disabled={isProcessing}
+          type="button"
+        >
+          {isProcessing ? "처리 중..." : "구독하기"}
+        </button>
         <div className={styles.headerContent}>
           <span className={styles.timerIcon}>⏰</span>
           <h2 className={styles.sectionTitle}>막판 할인 이벤트</h2>

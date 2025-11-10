@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@apollo/client";
@@ -18,29 +18,88 @@ export default function SecretsListPage() {
   const pathname = usePathname();
   const { openModal, closeModal } = useModal();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const hasOpenedModalRef = useRef(false);
 
   useEffect(() => {
     authManager.initializeToken();
     setIsLoggedIn(authManager.isLoggedIn());
   }, []);
 
-  const { data } = useQuery(FETCH_USER_LOGGED_IN, {
-    skip: !authManager.isLoggedIn(),
+  const [shouldSkipQuery, setShouldSkipQuery] = useState(!authManager.isLoggedIn());
+
+  const { data, error, refetch } = useQuery(FETCH_USER_LOGGED_IN, {
+    skip: shouldSkipQuery,
     errorPolicy: 'ignore',
     onCompleted: () => {
       setIsLoggedIn(true);
+      hasOpenedModalRef.current = false; // 로그인 성공 시 리셋
     },
-    onError: () => {
+    onError: (error) => {
       setIsLoggedIn(false);
+      // 토큰 만료 에러인 경우 토큰 제거
+      if (error.graphQLErrors?.some(
+        (err) => err.extensions?.code === 'UNAUTHENTICATED' || err.message.includes('토큰 만료')
+      )) {
+        authManager.clearToken();
+        setShouldSkipQuery(true);
+      }
     }
   });
+
+  // 토큰 상태 변경 감지
+  useEffect(() => {
+    const isLoggedIn = authManager.isLoggedIn();
+    setShouldSkipQuery(!isLoggedIn);
+  }, []);
+
+  // 토큰 만료 에러가 발생하면 로그인 모달 자동 열기
+  useEffect(() => {
+    const hasAuthError = error?.graphQLErrors?.some(
+      (err) => err.extensions?.code === 'UNAUTHENTICATED' || err.message.includes('토큰 만료')
+    );
+
+    if (hasAuthError && !isLoggedIn && !hasOpenedModalRef.current) {
+      hasOpenedModalRef.current = true;
+      openModal(
+        <LoginModal
+          onCancel={() => {
+            closeModal();
+            hasOpenedModalRef.current = false;
+          }}
+          onSuccess={async () => {
+            // 로그인 성공 후 토큰이 저장되었으므로 쿼리 다시 실행
+            setShouldSkipQuery(false);
+            if (authManager.isLoggedIn()) {
+              try {
+                await refetch();
+                setIsLoggedIn(true);
+              } catch (err) {
+                console.error('사용자 정보 조회 실패:', err);
+              }
+            }
+            closeModal();
+            hasOpenedModalRef.current = false;
+          }}
+        />
+      );
+    }
+  }, [error, isLoggedIn, openModal, closeModal, refetch]);
 
   const handleLoginClick = () => {
     openModal(
       <LoginModal
         onCancel={closeModal}
-        onSuccess={() => {
-          setIsLoggedIn(true);
+        onSuccess={async () => {
+          // 로그인 성공 후 토큰이 저장되었으므로 쿼리 다시 실행
+          setShouldSkipQuery(false);
+          if (authManager.isLoggedIn()) {
+            try {
+              await refetch();
+              setIsLoggedIn(true);
+            } catch (err) {
+              console.error('사용자 정보 조회 실패:', err);
+            }
+          }
           closeModal();
         }}
       />
