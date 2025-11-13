@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import Image from "next/image";
 import { Secret } from "@/components/secrets-list/types";
 import { mySoldSecrets, myBoughtSecrets } from "./mockData";
@@ -9,9 +9,9 @@ import styles from "./styles.module.css";
 export default function MySecrets() {
   const [activeTab, setActiveTab] = useState<"sold" | "bought">("sold");
 
-  const formatPrice = (price: number) => {
+  const formatPrice = useCallback((price: number) => {
     return `₩${price.toLocaleString()}`;
-  };
+  }, []);
 
   const currentSecrets = activeTab === "sold" ? mySoldSecrets : myBoughtSecrets;
 

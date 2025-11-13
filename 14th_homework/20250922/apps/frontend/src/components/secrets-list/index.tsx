@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@apollo/client";
@@ -114,7 +114,7 @@ export default function SecretsListPage() {
     }
   }, [error, isLoggedIn, openModal, closeModal, refetch]);
 
-  const handleLoginClick = () => {
+  const handleLoginClick = useCallback(() => {
     openModal(
       <LoginModal
         onCancel={closeModal}
@@ -133,13 +133,13 @@ export default function SecretsListPage() {
         }}
       />
     );
-  };
+  }, [openModal, closeModal, refetch]);
 
-  const handleLogoutClick = () => {
+  const handleLogoutClick = useCallback(() => {
     authManager.clearToken();
     setIsLoggedIn(false);
     window.location.reload();
-  };
+  }, []);
 
   if (loading) {
     return (

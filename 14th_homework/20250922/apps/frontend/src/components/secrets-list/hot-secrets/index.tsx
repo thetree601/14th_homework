@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Secret } from "../types";
@@ -10,7 +10,7 @@ interface HotSecretsProps {
   secrets: Secret[];
 }
 
-export default function HotSecrets({ secrets }: HotSecretsProps) {
+function HotSecrets({ secrets }: HotSecretsProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -21,13 +21,13 @@ export default function HotSecrets({ secrets }: HotSecretsProps) {
     return () => clearInterval(interval);
   }, [secrets.length]);
 
-  const goToSlide = (index: number) => {
+  const goToSlide = useCallback((index: number) => {
     setCurrentIndex(index);
-  };
+  }, []);
 
-  const formatPrice = (price: number) => {
+  const formatPrice = useCallback((price: number) => {
     return `₩${price.toLocaleString()}`;
-  };
+  }, []);
 
   return (
     <section className={styles.hotSecretsSection}>
@@ -78,4 +78,6 @@ export default function HotSecrets({ secrets }: HotSecretsProps) {
     </section>
   );
 }
+
+export default memo(HotSecrets);
 

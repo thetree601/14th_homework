@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Secret } from "../types";
@@ -10,10 +10,10 @@ interface RecommendedSecretsProps {
   secrets: Secret[];
 }
 
-export default function RecommendedSecrets({ secrets }: RecommendedSecretsProps) {
-  const formatPrice = (price: number) => {
+function RecommendedSecrets({ secrets }: RecommendedSecretsProps) {
+  const formatPrice = useCallback((price: number) => {
     return `₩${price.toLocaleString()}`;
-  };
+  }, []);
 
   return (
     <section className={styles.recommendedSecretsSection}>
@@ -56,4 +56,6 @@ export default function RecommendedSecrets({ secrets }: RecommendedSecretsProps)
     </section>
   );
 }
+
+export default memo(RecommendedSecrets);
 
