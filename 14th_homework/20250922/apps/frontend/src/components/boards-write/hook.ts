@@ -106,7 +106,8 @@ export function useBoardsWrite(props: BoardsWriteProps) {
       return watchedValues.writer?.trim() && watchedValues.title?.trim() && watchedValues.contents?.trim();
     }
     // 새 게시글 작성 모드에서는 모든 필드 검증
-    return watchedValues.writer?.trim() && watchedValues.password?.trim() && watchedValues.title?.trim() && watchedValues.contents?.trim();
+    const writeValues = watchedValues as BoardWriteFormData;
+    return writeValues.writer?.trim() && writeValues.password?.trim() && writeValues.title?.trim() && writeValues.contents?.trim();
   }, [watchedValues, props.isEdit]);
 
   const onChangeYoutubeUrl = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -275,17 +276,11 @@ export function useBoardsWrite(props: BoardsWriteProps) {
         };
       }
       // 이미지 배열 비교 - 빈 문자열 제거 후 비교
-      const filteredImages = images.filter(img => img !== "");
-      const originalImages = originalData?.images?.filter(img => img !== "") || [];
-      
-      console.log("현재 이미지 배열:", images);
-      console.log("필터링된 이미지 배열:", filteredImages);
-      console.log("원본 이미지 배열:", originalData?.images);
-      console.log("필터링된 원본 이미지 배열:", originalImages);
+      const filteredImages = images.filter((img: string) => img !== "");
+      const originalImages = originalData?.images?.filter((img: string) => img !== "") || [];
       
       if (JSON.stringify(filteredImages) !== JSON.stringify(originalImages)) {
         updateBoardInput.images = filteredImages;
-        console.log("이미지 변경 감지됨, 업데이트할 이미지:", filteredImages);
       }
 
       // 변경사항이 있는지 확인
@@ -294,8 +289,6 @@ export function useBoardsWrite(props: BoardsWriteProps) {
         return;
       }
 
-      console.log("updateBoard API 호출 전 - updateBoardInput:", updateBoardInput);
-      
       const result = await updateBoard({
         variables: {
           boardId: props.boardId as string,
@@ -314,7 +307,6 @@ export function useBoardsWrite(props: BoardsWriteProps) {
         ],
       });
       
-      console.log("updateBoard API 호출 후 - result:", result);
       showAlert("수정 완료!", `/boards/${props.boardId}`);
     } catch (error) {
       const apolloError = error as ApolloError;

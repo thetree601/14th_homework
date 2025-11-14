@@ -1,113 +1,45 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import { useModal } from "@/commons/providers/modal/modal.provider";
-import { authManager } from "@/lib/auth";
-import LoginModal from "@/components/secrets-list/modals/LoginModal";
-import styles from "./styles.module.css";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import SecretsForm, { SecretsFormData } from "@/components/secrets-form";
+import { createSecret } from "@/components/secrets-list/mutations";
 
 export default function SecretsNew() {
-  const { openModal, closeModal } = useModal();
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    // 로그인 상태 확인
-    authManager.initializeToken();
-    if (!authManager.isLoggedIn()) {
-      openModal(
-        <LoginModal
-          onCancel={closeModal}
-          onSuccess={() => {
-            closeModal();
-            alert("로그인 후 비밀을 등록할 수 있습니다.");
-          }}
-        />
-      );
-      return;
+  const handleSubmit = async (data: SecretsFormData) => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const result = await createSecret(data);
+      
+      if (result.success && result.id) {
+        alert("비밀이 성공적으로 등록되었습니다!");
+        router.push(`/secrets/${result.id}`);
+      } else {
+        alert(`등록 실패: ${result.error || "알 수 없는 오류가 발생했습니다."}`);
+      }
+    } catch (error) {
+      console.error("등록 중 오류 발생:", error);
+      alert("등록 중 오류가 발생했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsSubmitting(false);
     }
+  };
 
-    // TODO: 실제 등록 API 호출
-    console.log("비밀 등록하기");
+  const handleCancel = () => {
+    router.push("/secrets");
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.mainTitle}>비밀 등록하기</h1>
-        <p className={styles.mainSubtitle}>메인 분위기와 동일한 톤으로 구성된 등록 폼</p>
-      </div>
-
-      <section className={styles.formSection}>
-        <div className={styles.formGrid}>
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>비밀명</label>
-            <input className={styles.input} placeholder="비밀의 제목을 입력하세요" />
-          </div>
-
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>한줄 설명</label>
-            <input className={styles.input} placeholder="간단한 설명을 입력하세요" />
-          </div>
-
-          <div className={styles.fieldGroupFull}>
-            <label className={styles.label}>비밀 소개</label>
-            <textarea className={styles.textarea} placeholder="이 비밀에 대해 자세히 소개해 주세요" />
-          </div>
-
-          <div className={styles.fieldRow}>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>판매 가격</label>
-              <input className={styles.input} placeholder="예: 10000" inputMode="numeric" />
-            </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.label}>태그 입력</label>
-              <input className={styles.input} placeholder="쉼표(,)로 구분하여 입력" />
-            </div>
-          </div>
-
-          <div className={styles.fieldGroupFull}>
-            <label className={styles.label}>비밀과 관련된 주소</label>
-            <div className={styles.addressRow}>
-              <input className={styles.input} placeholder="주소" />
-              <button className={styles.secondaryButton} type="button">주소 검색</button>
-            </div>
-            <div className={styles.fieldRow}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.labelSm}>우편번호</label>
-                <input className={styles.input} placeholder="우편번호" />
-              </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.labelSm}>상세 위치</label>
-                <input className={styles.input} placeholder="상세 주소" />
-              </div>
-            </div>
-            <div className={styles.fieldRow}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.labelSm}>위도 (LAT)</label>
-                <input className={styles.input} placeholder="예: 37.5665" inputMode="decimal" />
-              </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.labelSm}>경도 (LNG)</label>
-                <input className={styles.input} placeholder="예: 126.9780" inputMode="decimal" />
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.fieldGroupFull}>
-            <label className={styles.label}>사진 첨부</label>
-            <div className={styles.uploadBox} role="button">
-              <span>클릭해서 사진 업로드</span>
-              <input className={styles.fileInput} type="file" accept="image/*" />
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.actions}>
-          <Link href="/secrets" className={styles.ghostButton}>취소</Link>
-          <button className={styles.primaryButton} type="button" onClick={handleSubmit}>등록하기</button>
-        </div>
-      </section>
-    </div>
+    <SecretsForm
+      mode="create"
+      onSubmit={handleSubmit}
+      onCancel={handleCancel}
+    />
   );
 }
 

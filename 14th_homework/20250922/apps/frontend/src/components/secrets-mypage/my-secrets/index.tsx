@@ -42,14 +42,18 @@ export default function MySecrets() {
           currentSecrets.map((secret) => (
             <div key={secret.id} className={styles.secretCard}>
               <div className={styles.imageWrapper}>
-                <Image
-                  src={secret.img}
-                  alt={secret.title}
-                  fill
-                  unoptimized
-                  className={styles.image}
-                  sizes="(max-width: 768px) 50vw, 25vw"
-                />
+                {secret.img ? (
+                  <Image
+                    src={secret.img}
+                    alt={secret.title}
+                    fill
+                    unoptimized
+                    className={styles.image}
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                  />
+                ) : (
+                  <div className={styles.imagePlaceholder}>이미지 없음</div>
+                )}
                 <div className={styles.overlay}>
                   <div className={styles.blurOverlay} />
                 </div>

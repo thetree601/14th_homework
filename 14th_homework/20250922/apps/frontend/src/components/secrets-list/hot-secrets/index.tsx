@@ -44,13 +44,18 @@ function HotSecrets({ secrets }: HotSecretsProps) {
           {secrets.map((secret) => (
             <Link key={secret.id} href={`/secrets/${secret.id}`} className={styles.secretCard}>
               <div className={styles.imageWrapper}>
-                <Image
-                  src={secret.img}
-                  alt={secret.title}
-                  fill
-                  className={styles.image}
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                />
+                {secret.img ? (
+                  <Image
+                    src={secret.img}
+                    alt={secret.title}
+                    fill
+                    className={styles.image}
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    unoptimized
+                  />
+                ) : (
+                  <div className={styles.imagePlaceholder}>이미지 없음</div>
+                )}
                 <div className={styles.overlay}>
                   <div className={styles.content}>
                     <h3 className={styles.title}>{secret.title}</h3>

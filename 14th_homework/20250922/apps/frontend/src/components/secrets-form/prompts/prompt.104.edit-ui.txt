@@ -1,0 +1,269 @@
+# 비밀 수정 UI 및 삭제 기능 구현
+
+## 목표
+비밀 수정 페이지의 UI를 구현하고, 기존 데이터를 폼에 표시하며, 삭제 기능을 연결합니다.
+
+## 현재 부족한 부분
+
+### 1. 수정 페이지 UI 미구현
+- `secrets-edit/index.tsx`의 `handleSubmit`에 TODO만 있고 실제 API 호출 없음
+- `edit/page.tsx`에서 `initialData`에 `image: null`로 설정됨
+- 기존 이미지 URL(`imageSrc`)을 `initialData`에 포함하지 않음
+
+### 2. 수정 모드에서 기존 데이터 표시 미구현
+- **중요**: 수정 페이지에서 기존 정보가 모두 폼에 채워져 있어야 함
+- `secrets-form`에서 수정 모드일 때 기존 이미지를 표시하는 로직 미완성
+- 기존 데이터가 폼에 표시되지 않음
+
+### 3. 삭제 기능 미연동
+- 삭제 확인 모달에서 실제 API 호출 없음
+- 삭제 성공 후 목록 페이지로 이동은 되어 있지만 실제 삭제가 없음
+
+## 구현 요구사항
+
+### 1. SecretsFormProps 인터페이스 확장
+- 위치: `/src/components/secrets-form/index.tsx`
+- 기존 이미지 URL을 전달받을 수 있도록 Props 확장 필요
+- `SecretsFormProps`에 `existingImageUrl?: string` 추가
+
+### 2. edit/page.tsx 수정
+- 위치: `/src/app/secrets/[secretId]/edit/page.tsx`
+- **중요**: `fetchSecretById`에서 반환된 모든 데이터를 `initialData`에 포함
+- **중요**: 기존 데이터가 모두 폼에 채워지도록 설정
+- `SecretsForm`에 `existingImageUrl` prop 전달
+
+#### 수정 예시
+```typescript
+// 기존 데이터를 모두 initialData에 포함하여 폼에 채움
+const initialData: Partial<SecretsFormData> = {
+  title: secretData.title, // 기존 제목
+  description: secretData.description, // 기존 한줄 설명
+  intro: secretData.intro, // 기존 비밀 소개
+  price: secretData.price.toString(), // 기존 가격
+  tags: secretData.tags.join(", "), // 기존 태그
+  address: secretData.address || "", // 기존 주소
+  postalCode: secretData.postalCode || "", // 기존 우편번호
+  addressDetail: secretData.addressDetail || "", // 기존 상세 주소
+  latitude: secretData.latitude || "", // 기존 위도
+  longitude: secretData.longitude || "", // 기존 경도
+  image: null, // 파일은 null로 유지 (기존 이미지는 existingImageUrl로 전달)
+};
+
+// SecretsEdit에 existingImageUrl 전달
+return (
+  <SecretsEdit
+    secretId={params.secretId}
+    initialData={initialData} // 모든 기존 데이터 포함
+    existingImageUrl={secretData.imageSrc} // 기존 이미지 URL 전달
+  />
+);
+```
+
+**주의사항**:
+- 모든 필드가 `initialData`에 포함되어야 폼에 기존 값이 표시됨
+- 빈 값이어도 빈 문자열("")로 설정하여 폼 필드가 초기화되도록 함
+- `image` 필드는 FileList 타입이므로 null로 설정하고, 실제 이미지는 `existingImageUrl`로 전달
+
+### 3. secrets-edit/index.tsx 수정
+- 위치: `/src/components/secrets-edit/index.tsx`
+- `updateSecret` 함수 import
+- `handleSubmit`에서 실제 API 호출
+- **중요**: `existingImageUrl`을 `updateSecret`에 전달하여 기존 이미지 유지 처리
+- 성공/실패 처리
+- 로딩 상태 관리 (선택사항)
+
+#### 수정 예시
+```typescript
+import { updateSecret } from "@/components/secrets-list/mutations";
+
+interface SecretsEditProps {
+  secretId: string;
+  initialData?: Partial<SecretsFormData>;
+  existingImageUrl?: string | null; // 기존 이미지 URL 추가
+}
+
+export default function SecretsEdit({ secretId, initialData, existingImageUrl }: SecretsEditProps) {
+  const router = useRouter();
+
+  const handleSubmit = async (data: SecretsFormData) => {
+    // existingImageUrl을 전달하여 기존 이미지 유지 처리
+    const result = await updateSecret(secretId, data, existingImageUrl);
+    
+    if (result.success) {
+      // 수정 성공 후 상세 페이지로 이동
+      router.push(`/secrets/${secretId}`);
+    } else {
+      // 에러 처리
+      alert(result.error || "비밀 수정에 실패했습니다.");
+    }
+  };
+
+  const handleCancel = () => {
+    router.push(`/secrets/${secretId}`);
+  };
+
+  return (
+    <SecretsForm
+      mode="edit"
+      initialData={initialData}
+      existingImageUrl={existingImageUrl}
+      onSubmit={handleSubmit}
+      onCancel={handleCancel}
+    />
+  );
+}
+```
+
+### 4. secrets-form/index.tsx 수정
+- 위치: `/src/components/secrets-form/index.tsx`
+- `SecretsFormProps`에 `existingImageUrl?: string` 추가
+- `useEffect`에서 `existingImageUrl`을 `existingImageUrl` state에 설정
+- 수정 모드이고 `existingImageUrl`이 있을 때 기존 이미지 표시
+- 이미지 제거 시 `existingImageUrl`도 null로 설정
+
+#### 수정 예시
+```typescript
+interface SecretsFormProps {
+  mode: "create" | "edit";
+  initialData?: Partial<SecretsFormData>;
+  existingImageUrl?: string; // 기존 이미지 URL 추가
+  onSubmit: (data: SecretsFormData) => void;
+  onCancel: () => void;
+}
+
+export default function SecretsForm({
+  mode,
+  initialData,
+  existingImageUrl, // 새 prop 추가
+  onSubmit,
+  onCancel,
+}: SecretsFormProps) {
+  // ...
+  
+  // 수정 모드일 때 기존 이미지 URL 설정
+  useEffect(() => {
+    if (mode === "edit" && existingImageUrl) {
+      setExistingImageUrl(existingImageUrl);
+    }
+  }, [mode, existingImageUrl]);
+
+  // 이미지 제거 핸들러 수정
+  const handleRemoveImage = () => {
+    setPreviewUrl(null);
+    setExistingImageUrl(null);
+    setValue("image", null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+  
+  // ...
+}
+```
+
+### 5. 삭제 기능 UI 연동
+- 위치: `/src/components/secrets-detail/SecretHeader.tsx`
+- `mutations.ts`에서 `deleteSecret` 함수 import
+- 삭제 확인 모달에서 실제 API 호출
+- 삭제 성공 후 목록 페이지로 이동
+
+#### 수정 예시
+```typescript
+import { deleteSecret } from "@/components/secrets-list/mutations";
+
+const handleDeleteClick = () => {
+  openModal(
+    <DeleteConfirmModal
+      onConfirm={async () => {
+        const result = await deleteSecret(secretId);
+        
+        if (result.success) {
+          closeModal();
+          // 삭제 성공 후 목록 페이지로 이동
+          window.location.href = "/secrets";
+        } else {
+          // 에러 처리
+          alert(result.error || "비밀 삭제에 실패했습니다.");
+        }
+      }}
+      onCancel={closeModal}
+    />
+  );
+};
+```
+
+## 구현 순서
+
+1. **SecretsFormProps 인터페이스 확장**
+   - `existingImageUrl` prop 추가
+
+2. **edit/page.tsx 수정**
+   - 모든 기존 데이터를 `initialData`에 포함
+   - `imageSrc`를 `existingImageUrl`로 전달
+
+3. **secrets-edit/index.tsx 수정**
+   - `updateSecret` 함수 호출
+   - `existingImageUrl` 전달
+   - 성공/실패 처리
+
+4. **secrets-form/index.tsx 수정**
+   - 기존 이미지 URL 표시 로직 완성
+   - 이미지 제거 시 기존 이미지도 제거
+
+5. **삭제 기능 UI 연동**
+   - `deleteSecret` 함수 import
+   - 삭제 확인 모달에서 실제 API 호출
+   - 삭제 성공 후 목록 페이지로 이동
+
+6. **UI 권한 체크 (현재는 구현하지 않음)**
+   - 현재는 모든 사용자에게 수정/삭제 버튼 표시
+   - 향후 Supabase 로그인 연동 시 작성자만 버튼 표시하도록 수정 예정
+
+## 주의사항
+
+### 기존 데이터 표시 (매우 중요)
+- **수정 페이지 진입 시**: 모든 기존 데이터가 폼에 채워져 있어야 함
+- **폼 초기화**: `initialData`에 모든 필드를 포함하여 폼이 기존 값으로 초기화되도록 함
+- **빈 값 처리**: 빈 값이어도 빈 문자열("")로 설정하여 폼 필드가 초기화되도록 함
+
+### 이미지 표시
+- 수정 모드에서 기존 이미지가 있으면 표시되어야 함
+- 새 이미지를 선택하면 기존 이미지 대신 새 이미지 미리보기 표시
+- 이미지 제거 버튼 클릭 시 기존 이미지와 새 이미지 모두 제거
+
+### 기타 주의사항
+- **권한 체크 로직은 구현하지 않음** (현재 단계에서는 불가능)
+- 수정/삭제 시 로그인 상태 확인은 UI에서만 처리 (실제 권한 체크는 없음)
+- 에러 발생 시 사용자에게 명확한 메시지 표시
+
+### 향후 개선 사항 (나중에 구현)
+- Supabase Authentication 연동
+- UI에서 작성자 본인에게만 수정/삭제 버튼 표시
+- 권한 체크 로직 추가
+
+## 테스트 체크리스트
+
+### 수정 페이지 진입 시
+- [ ] 수정 페이지로 이동했을 때 모든 기존 데이터가 폼에 채워져 있는가?
+- [ ] 제목, 설명, 소개, 가격, 태그 등 모든 필드에 기존 값이 표시되는가?
+- [ ] 주소, 우편번호, 상세주소, 위도, 경도 등 모든 필드에 기존 값이 표시되는가?
+- [ ] 수정 모드에서 기존 이미지가 정상적으로 표시되는가?
+
+### 수정 동작
+- [ ] 일부 필드만 수정했을 때 수정하지 않은 필드는 기존 값이 유지되는가?
+- [ ] 새 이미지를 선택하지 않으면 기존 이미지가 유지되는가?
+- [ ] 새 이미지를 선택하면 미리보기가 정상적으로 표시되는가?
+- [ ] 이미지를 제거하면 기존 이미지가 사라지는가?
+- [ ] 수정 API 호출이 정상적으로 작동하는가?
+- [ ] 수정 성공 후 상세 페이지로 이동하는가?
+- [ ] 수정 실패 시 에러 메시지가 표시되는가?
+
+### 삭제 동작
+- [ ] 삭제 버튼 클릭 시 확인 모달이 표시되는가?
+- [ ] 삭제 확인 시 실제로 삭제 API가 호출되는가?
+- [ ] 삭제 성공 후 목록 페이지로 이동하는가?
+- [ ] 삭제 실패 시 에러 메시지가 표시되는가?
+
+### 권한 (현재는 구현하지 않음)
+- [ ] 현재는 권한 체크 없이 모든 사용자가 수정/삭제 가능한가? (의도된 동작)
+

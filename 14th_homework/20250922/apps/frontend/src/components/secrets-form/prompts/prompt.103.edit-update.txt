@@ -1,0 +1,234 @@
+# 비밀 수정 기능 구현 - API 및 데이터 처리
+
+## 목표
+비밀 수정을 위한 API 함수(`updateSecret`)를 구현하고, 기존 데이터를 유지하면서 부분 업데이트를 처리합니다.
+
+## 현재 부족한 부분
+
+### 1. 수정 API 함수 미구현
+- `mutations.ts`에 `updateSecret` 함수 없음
+- 수정 성공 후 상세 페이지로 이동은 되어 있지만 실제 업데이트가 없음
+
+### 2. 기존 데이터 유지 로직 미구현
+- **중요**: 사용자가 수정하지 않은 필드는 기존 값 그대로 유지되어야 함
+- **중요**: 사용자가 수정한 필드만 업데이트되어야 함 (기존 내용을 버리면 안됨)
+- 이미지 처리: 새 이미지 선택/제거/유지 케이스 구분 필요
+
+## 구현 요구사항
+
+### 1. Supabase RLS 정책 설정 (현재 상황)
+
+#### 현재 상황
+- **GraphQL을 통한 로그인**: 현재 애플리케이션은 GraphQL (`main-practice.codebootcamp.co.kr/graphql`)을 통해 로그인하고 있음
+- **Supabase Authentication 미연동**: GraphQL 로그인 정보가 Supabase Authentication에 자동으로 동기화되지 않음
+- **작성자 식별 불가**: 현재 시스템에서는 글 작성자와 로그인 사용자를 매칭할 방법이 없음
+  - 비밀번호 기반 시스템이 아니므로 글마다 작성자를 확인할 수 없음
+  - GraphQL 사용자 ID와 Supabase 데이터를 연결할 수 없음
+- **결론**: 현재 단계에서는 권한 체크가 불가능하므로 모든 사용자가 등록/수정/삭제 가능하도록 설정
+
+#### 현재 설정된 RLS 정책
+```
+SELECT: anon (public read access) ✅
+INSERT: anon (모든 사용자 삽입 가능) ✅
+UPDATE: public (모든 사용자 수정 가능) ✅
+DELETE: public (모든 사용자 삭제 가능) ✅
+```
+
+**현재 단계**: 모든 사용자가 등록/수정/삭제 가능하도록 public 설정 유지
+
+#### 향후 개선 계획 (나중에 구현)
+- **Supabase Authentication 연동**: Supabase에서 직접 로그인할 수 있게 구현
+- **작성자 추적**: Supabase 로그인 시 `auth.uid()`를 사용하여 작성자 식별 가능
+- **RLS 정책 강화**: 작성자만 수정/삭제 가능하도록 RLS 정책 추가
+  ```sql
+  -- 향후 구현 예시 (현재는 적용하지 않음)
+  CREATE POLICY "Users can update their own secrets"
+  ON secrets
+  FOR UPDATE
+  USING (auth.uid() = user_id);
+  
+  CREATE POLICY "Users can delete their own secrets"
+  ON secrets
+  FOR DELETE
+  USING (auth.uid() = user_id);
+  ```
+
+**현재 구현 방향**: 권한 체크 없이 모든 기능 구현, 나중에 Supabase 로그인 연동 시 권한 체크 추가
+
+### 2. mutations.ts에 updateSecret 함수 추가
+- 위치: `/src/components/secrets-list/mutations.ts`
+- 함수명: `updateSecret`
+- 파라미터:
+  - `secretId: string` - 수정할 비밀의 ID
+  - `formData: SecretsFormData` - 수정할 폼 데이터
+  - `existingImageUrl?: string | null` - 기존 이미지 URL (선택사항)
+- 반환값: `Promise<{ success: boolean; id?: string; error?: string }>`
+- 기능:
+  - **기존 데이터 유지**: 사용자가 수정하지 않은 필드는 기존 값 그대로 유지
+  - **부분 업데이트**: 사용자가 수정한 필드만 업데이트
+  - **이미지 처리**:
+    - 새 이미지가 선택된 경우: 새 이미지 업로드 후 URL 업데이트
+    - 새 이미지가 없고 기존 이미지가 있는 경우: 기존 이미지 URL 유지 (변경 없음)
+    - 이미지가 제거된 경우: `img` 필드를 `null`로 설정
+  - 태그를 배열로 변환
+  - 숫자 필드 변환 (price, latitude, longitude)
+  - Supabase의 `update` 메서드 사용
+  - `updated_at`은 자동으로 업데이트됨 (Supabase 트리거 또는 기본값)
+
+#### 구현 예시 구조
+```typescript
+export async function updateSecret(
+  secretId: string,
+  formData: SecretsFormData,
+  existingImageUrl?: string | null // 기존 이미지 URL 전달받기
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  try {
+    // 1. 기존 데이터 조회 (수정하지 않은 필드 유지하기 위해)
+    const { data: existingData, error: fetchError } = await supabase
+      .from('secrets')
+      .select('*')
+      .eq('id', secretId)
+      .single();
+    
+    if (fetchError || !existingData) {
+      return { success: false, error: '비밀을 찾을 수 없습니다.' };
+    }
+
+    // 2. 이미지 처리
+    let imageUrl: string | undefined = undefined; // undefined = 변경 없음
+    if (formData.image && formData.image.length > 0) {
+      // 새 이미지 업로드
+      const uploadedUrl = await uploadImageToSupabase(formData.image[0]);
+      if (!uploadedUrl) {
+        return { success: false, error: '이미지 업로드에 실패했습니다.' };
+      }
+      imageUrl = uploadedUrl; // 새 이미지로 교체
+    } else if (formData.image === null && existingImageUrl) {
+      // 이미지가 명시적으로 제거된 경우 (사용자가 이미지 제거 버튼 클릭)
+      imageUrl = null; // 이미지 제거
+    }
+    // formData.image가 undefined이고 기존 이미지가 있으면 imageUrl은 undefined (변경 없음)
+
+    // 3. 데이터 변환 및 업데이트 객체 생성
+    // 중요: 사용자가 수정한 필드만 업데이트하고, 수정하지 않은 필드는 기존 값 유지
+    const updateData: any = {};
+    
+    // 필수 필드들은 항상 업데이트 (폼에서 필수 입력이므로)
+    updateData.title = formData.title;
+    updateData.desc = formData.description;
+    updateData.intro = formData.intro;
+    updateData.price = parseInt(formData.price, 10);
+    
+    // 태그 변환
+    const tagsArray = formData.tags
+      ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+      : null;
+    updateData.tags = tagsArray;
+    
+    // 주소 관련 필드 (빈 문자열이면 null로, 값이 있으면 업데이트)
+    updateData.address = formData.address || null;
+    updateData.postal_code = formData.postalCode || null;
+    updateData.address_detail = formData.addressDetail || null;
+    
+    // 위도/경도 변환
+    updateData.latitude = formData.latitude ? parseFloat(formData.latitude) : null;
+    updateData.longitude = formData.longitude ? parseFloat(formData.longitude) : null;
+
+    // 이미지 처리: 새 이미지가 있으면 업데이트, 제거되었으면 null, 없으면 undefined (변경 없음)
+    if (imageUrl !== undefined) {
+      updateData.img = imageUrl;
+    }
+    // imageUrl이 undefined이면 updateData에 포함하지 않음 (기존 이미지 유지)
+
+    // 4. Supabase 업데이트
+    // 현재는 권한 체크 없이 모든 사용자가 수정 가능
+    const { data, error } = await supabase
+      .from('secrets')
+      .update(updateData)
+      .eq('id', secretId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('비밀 수정 실패:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, id: data.id };
+  } catch (error) {
+    console.error('비밀 수정 중 오류 발생:', error);
+    return { success: false, error: '비밀 수정 중 오류가 발생했습니다.' };
+  }
+}
+```
+
+### 3. deleteSecret 함수 추가
+- 위치: `/src/components/secrets-list/mutations.ts`
+- 함수명: `deleteSecret`
+- 파라미터:
+  - `secretId: string` - 삭제할 비밀의 ID
+- 반환값: `Promise<{ success: boolean; error?: string }>`
+
+#### 구현 예시
+```typescript
+export async function deleteSecret(
+  secretId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 현재는 권한 체크 없이 모든 사용자가 삭제 가능
+    const { error } = await supabase
+      .from('secrets')
+      .delete()
+      .eq('id', secretId);
+
+    if (error) {
+      console.error('비밀 삭제 실패:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('비밀 삭제 중 오류 발생:', error);
+    return { success: false, error: '비밀 삭제 중 오류가 발생했습니다.' };
+  }
+}
+```
+
+**참고**: 향후 Supabase 로그인 연동 시 권한 체크 로직 추가 예정
+
+## 구현 순서
+
+1. **mutations.ts에 updateSecret 함수 추가**
+   - 기존 데이터 조회 로직 구현
+   - 이미지 처리 로직 구현 (새 이미지/제거/유지)
+   - 데이터 변환 로직 구현
+   - Supabase update 호출
+   - **권한 체크 없음** (현재는 모든 사용자가 수정 가능)
+
+2. **mutations.ts에 deleteSecret 함수 추가**
+   - Supabase delete 호출
+   - **권한 체크 없음** (현재는 모든 사용자가 삭제 가능)
+
+## 주의사항
+
+### 기존 데이터 유지 (매우 중요)
+- **부분 업데이트**: 사용자가 수정한 필드만 업데이트하고, 수정하지 않은 필드는 기존 값 유지
+- **기존 내용 보존**: 수정 행위를 통해 기본 정보들이 리셋되면 안됨
+- **이미지 처리**:
+  - 기존 이미지가 있고 새 이미지를 선택하지 않으면 기존 이미지 URL 유지
+  - 새 이미지를 선택하면 새 이미지로 교체
+  - 이미지 제거 버튼을 클릭하면 이미지 제거 (`null`로 설정)
+  - `updateData`에 `img` 필드를 포함하지 않으면 기존 이미지 유지 (Supabase의 부분 업데이트)
+
+### 기타 주의사항
+- **권한 체크 로직은 구현하지 않음** (현재 단계에서는 불가능)
+- Supabase의 `update` 메서드는 전달된 필드만 업데이트하므로, 수정하지 않은 필드는 `updateData`에 포함하지 않으면 자동으로 유지됨
+- 이미지 URL은 `undefined`로 두면 업데이트되지 않음 (기존 값 유지)
+- 이미지 URL을 `null`로 설정하면 이미지가 제거됨
+
+### 향후 개선 사항 (나중에 구현)
+- Supabase Authentication 연동
+- `secrets` 테이블에 `user_id` 컬럼 추가 (Supabase auth.users 참조)
+- RLS 정책 추가: 작성자만 수정/삭제 가능
+- 권한 체크 로직 추가
+

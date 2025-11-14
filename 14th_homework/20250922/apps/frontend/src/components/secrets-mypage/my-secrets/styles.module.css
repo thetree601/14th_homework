@@ -107,6 +107,21 @@
   transition: all 0.4s ease;
 }
 
+.imagePlaceholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 10, 0.8);
+  color: #888;
+  font-size: 0.9rem;
+  border: 1px solid rgba(199, 167, 74, 0.2);
+}
+
 .secretCard:hover .image {
   filter: blur(0) brightness(0.7);
   transform: scale(1.1);

@@ -12,25 +12,43 @@ export type SecretDetailData = {
 	id: string;
 	title: string;
 	description: string;
-	imageSrc: string;
+	img: string | null; // 데이터베이스 컬럼명 img를 그대로 사용
 	tags: string[];
 	intro: string;
 	price: number;
+	address?: string;
+	postalCode?: string;
+	addressDetail?: string;
+	latitude?: string;
+	longitude?: string;
 };
 
 export default function SecretDetail({ data }: { data: SecretDetailData }) {
+	const handleDelete = () => {
+		// 삭제 후 목록 페이지로 리다이렉트
+		window.location.href = "/secrets";
+	};
+
 	return (
 		<div className={styles.container} data-testid="secret-detail">
 			<SecretHeader
 				title={data.title}
 				description={data.description}
 				tags={data.tags}
+				secretId={data.id}
+				onDelete={handleDelete}
 			/>
 			<div className={styles.main}>
-				<SecretContent imageSrc={data.imageSrc} intro={data.intro} />
+				<SecretContent img={data.img} intro={data.intro} />
 				<div className={styles.side}>
 					<SecretActions price={data.price} />
-					<SecretGeo />
+					<SecretGeo
+						address={data.address}
+						postalCode={data.postalCode}
+						addressDetail={data.addressDetail}
+						latitude={data.latitude}
+						longitude={data.longitude}
+					/>
 				</div>
 			</div>
 			<SecretComments />
