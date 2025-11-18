@@ -1,0 +1,203 @@
+.userInfoSection {
+  padding: 4rem 2rem;
+  margin-bottom: 4rem;
+  animation: fadeUp 1.1s ease-out;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sectionHeader {
+  text-align: center;
+  max-width: 1400px;
+  margin: 0 auto 3rem;
+}
+
+.sectionTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #c7a74a;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 10px rgba(199, 167, 74, 0.3);
+}
+
+.sectionSubtitle {
+  font-size: 0.9rem;
+  color: #aaa;
+  font-style: italic;
+}
+
+.userInfoContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.profileCard {
+  background: #1b1b1b;
+  border-radius: 12px;
+  border: 1px solid rgba(199, 167, 74, 0.1);
+  padding: 2rem;
+  transition: all 0.3s ease;
+}
+
+.profileCard:hover {
+  border-color: rgba(199, 167, 74, 0.3);
+  box-shadow: 0 0 15px rgba(199, 167, 74, 0.15);
+}
+
+.profileHeader {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.profileImageWrapper {
+  flex-shrink: 0;
+}
+
+.profileImage {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(199, 167, 74, 0.3);
+}
+
+.profileImagePlaceholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(199, 167, 74, 0.15);
+  border: 2px solid rgba(199, 167, 74, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #c7a74a;
+  text-shadow: 0 0 10px rgba(199, 167, 74, 0.5);
+}
+
+.profileInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.userName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #eee;
+  margin: 0;
+}
+
+.userEmail {
+  font-size: 0.95rem;
+  color: #aaa;
+  margin: 0;
+  font-style: italic;
+}
+
+.pointCard {
+  background: rgba(199, 167, 74, 0.05);
+  border: 1px solid rgba(199, 167, 74, 0.2);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pointLabel {
+  font-size: 0.95rem;
+  color: #aaa;
+  font-weight: 600;
+}
+
+.pointAmount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #c7a74a;
+  text-shadow: 0 0 10px rgba(199, 167, 74, 0.5);
+}
+
+.passwordChangeWrapper {
+  width: 100%;
+}
+
+.loadingContainer,
+.errorContainer,
+.emptyContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 3rem 2rem;
+  background: #1b1b1b;
+  border-radius: 12px;
+  border: 1px solid rgba(199, 167, 74, 0.1);
+}
+
+.loadingText,
+.errorText,
+.emptyText {
+  font-size: 1rem;
+  color: #aaa;
+  margin: 0;
+}
+
+.errorText {
+  color: #f87171;
+}
+
+@media (max-width: 768px) {
+  .userInfoSection {
+    padding: 2rem 1rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.5rem;
+  }
+
+  .profileCard {
+    padding: 1.5rem;
+  }
+
+  .profileHeader {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .profileInfo {
+    align-items: center;
+  }
+
+  .userName {
+    font-size: 1.25rem;
+  }
+
+  .pointCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .pointAmount {
+    font-size: 1.25rem;
+  }
+}
+

@@ -15,6 +15,30 @@
   margin-bottom: 32px;
 }
 
+.listWrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.virtualizedList {
+  width: 100%;
+}
+
+.loader {
+  text-align: center;
+  margin-top: 16px;
+  color: #6b7280;
+  padding: 16px;
+}
+
+.endMessage {
+  text-align: center;
+  margin-top: 16px;
+  color: #9ca3af;
+  padding: 16px;
+}
+
 @media (max-width: 767px) {
   .postTitle {
     font-size: 20px;

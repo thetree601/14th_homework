@@ -1,0 +1,114 @@
+# /secrets/mypage 포인트 내역 조회 기능 구현
+
+## 요구사항
+/secrets/mypage 페이지에서 로그인한 사용자의 충전된 포인트 내역을 조회하여 표시하는 기능을 구현합니다.
+
+## 기능 상세
+
+### 1. 포인트 내역 조회
+- `fetchUserLoggedIn` GraphQL 쿼리를 사용하여 로그인한 사용자 정보 조회
+- 사용자의 포인트 정보(`userPoint`)를 포함하여 조회
+- 현재 포인트 잔액 표시
+
+### 2. GraphQL Query 스키마
+- Query: `fetchUserLoggedIn: User!`
+- User 타입 필드:
+  - `_id: ID!`
+  - `email: String!`
+  - `name: String!`
+  - `picture: String`
+  - `userPoint: UserPoint` (포인트 정보)
+  - `createdAt: DateTime!`
+  - `updatedAt: DateTime!`
+  - `deletedAt: DateTime`
+
+### 3. UserPoint 타입
+- `amount: number` (포인트 잔액)
+
+### 4. 컴포넌트 수정
+- 기존 `PointHistory` 컴포넌트를 수정하여 실제 데이터를 표시
+- `mockData` 대신 `fetchUserLoggedIn` 쿼리 결과 사용
+- React Query의 `useQuery` 훅을 사용하여 데이터 페칭
+
+### 5. UI/UX 요구사항
+- 로딩 상태: 데이터 로딩 중일 때 로딩 인디케이터 표시
+- 에러 처리: GraphQL 에러 발생 시 에러 메시지 표시
+- 빈 상태: 포인트 정보가 없을 경우 적절한 메시지 표시
+- 포인트 잔액 표시: 현재 보유 포인트를 명확하게 표시
+
+### 6. 스타일 가이드
+- 기존 secrets-mypage 컴포넌트 스타일과 일관성 유지
+- 다크 테마 (#0a0a0a 배경, #c7a74a 골드 강조색)
+- CSS 모듈 사용 (styles.module.css)
+- 반응형 디자인 지원
+
+## 구현 파일 구조
+
+```
+src/components/secrets-mypage/
+├── prompts/
+│   └── prompt.102.point-history-fetch.txt (이 파일)
+├── point-history/
+│   ├── index.tsx (수정 필요)
+│   ├── styles.module.css
+│   └── mockData.ts (참고용, 실제 사용 안 함)
+└── index.tsx (메인 컴포넌트)
+```
+
+## GraphQL Query 예시
+
+```typescript
+import { graphql } from '@/commons/graphql/gql';
+
+const FETCH_USER_LOGGED_IN = graphql(`
+  query fetchUserLoggedIn {
+    fetchUserLoggedIn {
+      _id
+      email
+      name
+      picture
+      userPoint {
+        amount
+      }
+      createdAt
+      updatedAt
+      deletedAt
+    }
+  }
+`);
+```
+
+## 컴포넌트 구조
+
+### PointHistory 컴포넌트 수정 사항
+- React 함수 컴포넌트 유지
+- "use client" 지시어 사용 (Next.js 클라이언트 컴포넌트)
+- `useQuery`로 `fetchUserLoggedIn` 쿼리 실행
+- 로딩, 에러, 성공 상태 처리
+- 포인트 잔액 표시
+
+### 상태 관리
+- React Query의 `useQuery` 훅 사용
+- `isLoading`: 로딩 상태
+- `error`: 에러 상태
+- `data`: 쿼리 결과 데이터
+
+### 데이터 표시
+- 현재 포인트 잔액: `data?.fetchUserLoggedIn?.userPoint?.amount`
+- 사용자 정보: 필요시 표시 가능
+- 포인트 잔액 포맷팅: `₩${amount.toLocaleString()}` 형식
+
+## 에러 처리
+- GraphQL 에러: `error` 객체에서 에러 메시지 추출
+- 네트워크 에러: 사용자에게 알림
+- 데이터 없음: `userPoint`가 null인 경우 처리
+
+## 보안 고려사항
+- 로그인하지 않은 사용자의 경우 에러 처리
+- 민감한 정보는 콘솔에 로그하지 않음
+- 쿼리 결과 캐싱 활용 (React Query 기본 동작)
+
+## 참고사항
+- 기존 `mockData`는 참고용으로 유지하되 실제 데이터 조회로 대체
+- 향후 `fetchPointTransactionsOfLoading` 쿼리를 추가하여 실제 충전 내역 목록을 표시할 수 있도록 확장 가능한 구조로 구현
+

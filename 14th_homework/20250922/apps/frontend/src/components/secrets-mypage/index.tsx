@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import UserInfo from "./user-info";
 import MySecrets from "./my-secrets";
 import SubscriptionStatus from "./subscription-status";
 import PointHistory from "./point-history";
@@ -34,6 +35,7 @@ export default function SecretsMyPage() {
         </p>
       </div>
 
+      <UserInfo />
       <MySecrets />
       <SubscriptionStatus />
       <PointHistory />

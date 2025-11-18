@@ -1,0 +1,177 @@
+.passwordSection {
+  padding: 4rem 2rem;
+  margin-bottom: 4rem;
+  animation: fadeUp 1.1s ease-out;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sectionHeader {
+  text-align: center;
+  max-width: 1400px;
+  margin: 0 auto 3rem;
+}
+
+.sectionTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #c7a74a;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 10px rgba(199, 167, 74, 0.3);
+}
+
+.sectionSubtitle {
+  font-size: 0.9rem;
+  color: #aaa;
+  font-style: italic;
+}
+
+.passwordContainer {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form {
+  background: #1b1b1b;
+  border-radius: 12px;
+  border: 1px solid rgba(199, 167, 74, 0.1);
+  padding: 2rem;
+  transition: all 0.3s ease;
+}
+
+.form:hover {
+  border-color: rgba(199, 167, 74, 0.3);
+  box-shadow: 0 0 15px rgba(199, 167, 74, 0.15);
+}
+
+.inputGroup {
+  margin-bottom: 1.5rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #eee;
+  margin-bottom: 0.5rem;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(199, 167, 74, 0.2);
+  background: rgba(199, 167, 74, 0.05);
+  color: #eee;
+  font-size: 1rem;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: #666;
+}
+
+.input:focus {
+  outline: none;
+  border-color: rgba(199, 167, 74, 0.5);
+  background: rgba(199, 167, 74, 0.08);
+  box-shadow: 0 0 8px rgba(199, 167, 74, 0.2);
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.inputError {
+  border-color: rgba(248, 113, 113, 0.5);
+  background: rgba(248, 113, 113, 0.05);
+}
+
+.inputError:focus {
+  border-color: rgba(248, 113, 113, 0.7);
+  box-shadow: 0 0 8px rgba(248, 113, 113, 0.2);
+}
+
+.errorMessage {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #f87171;
+  font-style: italic;
+}
+
+.successMessage {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.buttonContainer {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.changeButton {
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  border: 1px solid rgba(199, 167, 74, 0.3);
+  color: #c7a74a;
+  background: rgba(199, 167, 74, 0.1);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  min-width: 150px;
+}
+
+.changeButton:hover:not(:disabled) {
+  background: rgba(199, 167, 74, 0.2);
+  border-color: rgba(199, 167, 74, 0.5);
+  box-shadow: 0 0 12px rgba(199, 167, 74, 0.3);
+  transform: translateY(-1px);
+}
+
+.changeButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.changeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .passwordSection {
+    padding: 2rem 1rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.5rem;
+  }
+
+  .form {
+    padding: 1.5rem;
+  }
+
+  .changeButton {
+    width: 100%;
+  }
+}
+

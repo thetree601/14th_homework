@@ -1,0 +1,174 @@
+# /secrets/mypage 내 정보 영역 구현
+
+## 요구사항
+/secrets/mypage 페이지에 "내 정보" 영역을 생성하고, 로그인한 사용자의 이름을 표시하며, 비밀번호 변경 및 포인트 조회 기능을 이 영역 안에 통합합니다.
+
+## 기능 상세
+
+### 1. 내 정보 영역 섹션 생성
+- 마이 페이지 최상단에 "내 정보" 섹션 추가
+- 기존 섹션들(나의 비밀, 구독 상태, 포인트 내역, 비밀번호 변경)과 동일한 스타일 유지
+- 섹션 제목: "내 정보"
+- 섹션 부제목: "계정 정보를 확인하고 관리하세요"
+
+### 2. 로그인한 사용자 이름 표시
+- `fetchUserLoggedIn` GraphQL 쿼리를 사용하여 로그인한 사용자 정보 조회
+- 사용자의 이름(`name`)을 내 정보 영역 상단에 표시
+- 사용자 프로필 이미지(`picture`)가 있으면 표시, 없으면 기본 아바타 표시
+- 사용자 이메일(`email`) 표시 (선택사항)
+
+### 3. GraphQL Query 스키마
+- Query: `fetchUserLoggedIn: User!`
+- User 타입 필드:
+  - `_id: ID!`
+  - `email: String!`
+  - `name: String!`
+  - `picture: String`
+  - `userPoint: UserPoint` (포인트 정보)
+  - `createdAt: DateTime!`
+  - `updatedAt: DateTime!`
+  - `deletedAt: DateTime`
+
+### 4. 내 정보 영역 구성 요소
+내 정보 영역 안에 다음 기능들을 포함:
+
+#### 4.1 사용자 정보 표시
+- 사용자 이름 (필수)
+- 사용자 프로필 이미지 (있을 경우)
+- 사용자 이메일 (선택사항)
+
+#### 4.2 포인트 조회
+- 기존 `PointHistory` 컴포넌트의 포인트 잔액 표시 기능을 내 정보 영역으로 이동
+- `fetchUserLoggedIn` 쿼리의 `userPoint.amount`를 사용하여 현재 포인트 잔액 표시
+- 포인트 잔액 포맷팅: `₩${amount.toLocaleString()}` 형식
+
+#### 4.3 비밀번호 변경
+- 기존 `PasswordChange` 컴포넌트를 내 정보 영역 안에 포함
+- 비밀번호 변경 폼 유지
+
+### 5. 컴포넌트 구조 재구성
+
+#### 5.1 새로운 UserInfo 컴포넌트 생성
+- `src/components/secrets-mypage/user-info/index.tsx` 생성
+- `fetchUserLoggedIn` 쿼리를 사용하여 사용자 정보 조회
+- 사용자 이름, 프로필 이미지, 이메일 표시
+- 포인트 잔액 표시
+- 비밀번호 변경 컴포넌트 포함
+
+#### 5.2 메인 컴포넌트 수정
+- `SecretsMyPage` 컴포넌트에서 `UserInfo` 컴포넌트를 최상단에 추가
+- 기존 `PointHistory`와 `PasswordChange`는 `UserInfo` 내부로 이동
+- `MySecrets`와 `SubscriptionStatus`는 그대로 유지
+
+### 6. UI/UX 요구사항
+- 로딩 상태: 데이터 로딩 중일 때 로딩 인디케이터 표시
+- 에러 처리: GraphQL 에러 발생 시 에러 메시지 표시
+- 빈 상태: 사용자 정보가 없을 경우 적절한 메시지 표시
+- 사용자 이름: 큰 글씨로 명확하게 표시
+- 프로필 이미지: 원형 이미지로 표시, 없으면 기본 아바타 아이콘
+- 포인트 잔액: 눈에 띄는 위치에 표시
+
+### 7. 스타일 가이드
+- 기존 secrets-mypage 컴포넌트 스타일과 일관성 유지
+- 다크 테마 (#0a0a0a 배경, #c7a74a 골드 강조색)
+- CSS 모듈 사용 (styles.module.css)
+- 반응형 디자인 지원
+- 내 정보 영역은 카드 형태로 구분
+
+## 구현 파일 구조
+
+```
+src/components/secrets-mypage/
+├── prompts/
+│   └── prompt.103.user-info-section.txt (이 파일)
+├── user-info/
+│   ├── index.tsx (새로 생성)
+│   └── styles.module.css (새로 생성)
+├── password-change/
+│   ├── index.tsx (기존 유지, UserInfo에서 사용)
+│   └── styles.module.css (기존 유지)
+├── point-history/
+│   ├── index.tsx (기존 유지, 포인트 내역 목록은 그대로)
+│   └── styles.module.css (기존 유지)
+└── index.tsx (메인 컴포넌트 수정)
+```
+
+## GraphQL Query 예시
+
+```typescript
+import { graphql } from '@/commons/graphql/gql';
+
+const FETCH_USER_LOGGED_IN = graphql(`
+  query fetchUserLoggedIn {
+    fetchUserLoggedIn {
+      _id
+      email
+      name
+      picture
+      userPoint {
+        amount
+      }
+      createdAt
+      updatedAt
+      deletedAt
+    }
+  }
+`);
+```
+
+## 컴포넌트 구조
+
+### UserInfo 컴포넌트
+- React 함수 컴포넌트
+- "use client" 지시어 사용 (Next.js 클라이언트 컴포넌트)
+- `useQuery`로 `fetchUserLoggedIn` 쿼리 실행
+- 로딩, 에러, 성공 상태 처리
+- 사용자 정보 표시
+- 포인트 잔액 표시
+- `PasswordChange` 컴포넌트 포함
+
+### 상태 관리
+- React Query의 `useQuery` 훅 사용
+- `isLoading`: 로딩 상태
+- `error`: 에러 상태
+- `data`: 쿼리 결과 데이터
+
+### 데이터 표시
+- 사용자 이름: `data?.fetchUserLoggedIn?.name`
+- 사용자 이메일: `data?.fetchUserLoggedIn?.email`
+- 프로필 이미지: `data?.fetchUserLoggedIn?.picture`
+- 포인트 잔액: `data?.fetchUserLoggedIn?.userPoint?.amount`
+- 포인트 잔액 포맷팅: `₩${amount.toLocaleString()}` 형식
+
+## 레이아웃 구조
+
+```
+/secrets/mypage
+├── 헤더 (기존 유지)
+├── 내 정보 영역 (새로 생성)
+│   ├── 사용자 프로필 (이름, 이미지, 이메일)
+│   ├── 포인트 잔액
+│   └── 비밀번호 변경
+├── 나의 비밀 (기존 유지)
+├── 구독 상태 (기존 유지)
+└── 포인트 사용내역 (기존 유지, 포인트 내역 목록)
+```
+
+## 에러 처리
+- GraphQL 에러: `error` 객체에서 에러 메시지 추출
+- 네트워크 에러: 사용자에게 알림
+- 데이터 없음: 사용자 정보가 없는 경우 처리
+- 로그인하지 않은 사용자: 에러 처리 또는 리다이렉트
+
+## 보안 고려사항
+- 로그인하지 않은 사용자의 경우 에러 처리
+- 민감한 정보는 콘솔에 로그하지 않음
+- 쿼리 결과 캐싱 활용 (React Query 기본 동작)
+- 사용자 정보는 인증된 사용자만 조회 가능
+
+## 참고사항
+- 기존 `PointHistory` 컴포넌트는 포인트 내역 목록을 표시하는 용도로 그대로 유지
+- 포인트 잔액은 `UserInfo` 컴포넌트에서 표시
+- `PasswordChange` 컴포넌트는 `UserInfo` 내부에 포함되지만 독립적인 컴포넌트로 유지
+- 기존 컴포넌트들의 기능은 그대로 유지하면서 레이아웃만 재구성
+

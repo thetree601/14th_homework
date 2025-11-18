@@ -1,0 +1,149 @@
+아래의 조건을 모두 적용하여, 아래의 요구사항을 모두 구현할 것.
+구현 결과를 체크리스트로 반환할 것.
+
+==============================================
+
+조건-파일경로) 수정될 파일경로: src/components/secrets-list/hot-secrets/index.tsx
+조건-파일경로) 수정될 파일경로: src/components/secrets-list/sale-secrets/index.tsx
+조건-파일경로) 수정될 파일경로: src/components/secrets-list/recommended-secrets/index.tsx
+조건-파일경로) 참고할 쿼리 파일경로: src/components/secrets-list/queries.ts
+조건-파일경로) 참고할 상세 페이지 파일경로: src/app/secrets/[secretId]/page.tsx
+
+==============================================
+
+핵심요구사항) Secrets 목록 페이지의 Link 컴포넌트에 뷰포트 기반 prefetch를 적용할 것.
+
+핵심요구사항) Next.js Link 컴포넌트의 prefetch prop을 활용하여, 뷰포트에 보이는 카드만 prefetch하도록 최적화할 것.
+
+핵심요구사항) 사용자가 실제로 볼 수 있는 항목만 prefetch하여 불필요한 네트워크 요청을 방지할 것.
+
+구현방법) 
+1. Next.js Link 컴포넌트의 prefetch prop을 동적으로 제어
+2. Intersection Observer API를 사용하여 뷰포트에 보이는 카드 감지
+3. 뷰포트에 보이는 카드의 Link에만 prefetch={true} 설정
+4. 뷰포트 밖의 카드는 prefetch={false}로 설정하여 불필요한 prefetch 방지
+5. 또는 Link 컴포넌트의 기본 동작을 활용하되, 명시적으로 prefetch 제어
+
+주의사항) 
+- Next.js Link는 기본적으로 뷰포트에 보이는 링크를 자동으로 prefetch함
+- 하지만 명시적으로 제어하면 더 세밀한 최적화 가능
+- Intersection Observer를 사용할 경우, 컴포넌트 언마운트 시 observer 정리 필요
+- 모바일 환경에서는 데이터 사용량을 고려하여 prefetch를 더 보수적으로 적용 고려
+
+기술적 세부사항)
+- Next.js Link 컴포넌트의 prefetch prop:
+  - prefetch={true}: 항상 prefetch (기본값)
+  - prefetch={false}: prefetch 비활성화
+  - prefetch={undefined}: Next.js가 자동으로 결정 (뷰포트 기반)
+- Intersection Observer API를 사용하여 각 카드가 뷰포트에 들어오는지 감지
+- 뷰포트에 들어온 카드만 prefetch 활성화
+- 또는 useInView hook (react-intersection-observer 라이브러리) 사용 가능
+
+예시코드구조 - 방법 1 (Intersection Observer 직접 사용):
+```typescript
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+
+function HotSecrets({ secrets }: HotSecretsProps) {
+  const [visibleIds, setVisibleIds] = useState<Set<string>>(new Set());
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const secretId = entry.target.getAttribute('data-secret-id');
+            if (secretId) {
+              setVisibleIds((prev) => new Set(prev).add(secretId));
+            }
+          }
+        });
+      },
+      {
+        rootMargin: '50px', // 뷰포트 기준 50px 전에 prefetch 시작
+        threshold: 0.1,
+      }
+    );
+
+    // 모든 카드에 observer 연결
+    const cards = document.querySelectorAll('[data-secret-id]');
+    cards.forEach((card) => observerRef.current?.observe(card));
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, [secrets]);
+
+  return (
+    <section className={styles.hotSecretsSection}>
+      <div className={styles.carouselContainer}>
+        {secrets.map((secret) => (
+          <Link 
+            key={secret.id} 
+            href={`/secrets/${secret.id}`}
+            prefetch={visibleIds.has(secret.id)}
+            data-secret-id={secret.id}
+            className={styles.secretCard}
+          >
+            {/* ... */}
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+```
+
+예시코드구조 - 방법 2 (react-intersection-observer 라이브러리 사용):
+```typescript
+import { useInView } from 'react-intersection-observer';
+import Link from 'next/link';
+
+function SecretCard({ secret }: { secret: Secret }) {
+  const { ref, inView } = useInView({
+    rootMargin: '50px', // 뷰포트 기준 50px 전에 감지
+    threshold: 0.1,
+    triggerOnce: true, // 한 번만 트리거
+  });
+
+  return (
+    <Link 
+      ref={ref}
+      href={`/secrets/${secret.id}`}
+      prefetch={inView} // 뷰포트에 보일 때만 prefetch
+      className={styles.secretCard}
+    >
+      {/* ... */}
+    </Link>
+  );
+}
+```
+
+성능 고려사항)
+- rootMargin을 적절히 설정하여 사용자가 스크롤하기 전에 미리 prefetch
+- 너무 큰 rootMargin은 불필요한 prefetch를 유발할 수 있음
+- 모바일 환경에서는 rootMargin을 더 작게 설정하여 데이터 사용량 절약
+- threshold 값을 조정하여 카드가 어느 정도 보일 때 prefetch할지 결정
+
+추가 최적화 옵션)
+- 네트워크 상태에 따라 prefetch 제어 (navigator.connection API 사용)
+- 사용자가 빠르게 스크롤하는 경우 prefetch 스킵
+- 이미 방문한 페이지는 prefetch 스킵 (Next.js가 자동 처리)
+
+==============================================
+
+체크리스트:
+- [ ] 각 Secrets 컴포넌트 (HotSecrets, SaleSecrets, RecommendedSecrets)에 뷰포트 감지 로직 추가
+- [ ] Intersection Observer 또는 useInView hook을 사용하여 카드가 뷰포트에 들어오는지 감지
+- [ ] Link 컴포넌트의 prefetch prop을 동적으로 제어
+- [ ] 뷰포트에 보이는 카드만 prefetch={true}, 나머지는 prefetch={false} 설정
+- [ ] 컴포넌트 언마운트 시 observer 정리 로직 추가
+- [ ] rootMargin과 threshold 값을 적절히 설정
+- [ ] 코드 주석 추가하여 prefetch 최적화 동작 설명
+
+선택사항 체크리스트:
+- [ ] 네트워크 상태에 따른 prefetch 제어 로직 추가
+- [ ] 모바일 환경에서의 추가 최적화 적용
+- [ ] 성능 측정 및 모니터링 코드 추가
+

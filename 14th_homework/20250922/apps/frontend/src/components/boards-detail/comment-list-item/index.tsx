@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Rating } from "@mui/material";
 import CommentWrite from "@/components/boards-detail/comment-write";
+import styles from "./styles.module.css";
 
 interface BoardCommentItem {
   _id: string;
@@ -39,41 +40,43 @@ export default function CommentListItem({ comment, onDelete, boardId }: CommentL
   }
 
   return (
-    <li style={{ padding: "12px 0", borderBottom: "1px solid #eee" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#e5e7eb" }} />
-        <div style={{ fontWeight: 600 }}>{comment.writer || "익명"}</div>
-        <Rating
-          value={comment.rating}
-          readOnly
-          size="small"
-          sx={{ color: "#f26d21", marginLeft: "auto" }}
-        />
-        <button
-          onClick={() => setIsEdit(true)}
-          style={{ background: "none", border: "none", cursor: "pointer" }}
-        >
-          <Image
-            src="/images/commentedit.png"
-            alt="수정"
-            width={20}
-            height={20}
+    <li className={styles.commentItem}>
+      <div className={styles.header}>
+        <div className={styles.avatar} />
+        <div className={styles.writer}>{comment.writer || "익명"}</div>
+        <div className={styles.ratingWrapper}>
+          <Rating
+            value={comment.rating}
+            readOnly
+            size="small"
+            sx={{ color: "#f26d21" }}
           />
-        </button>
-        <button
-          onClick={() => onDelete(comment._id)}
-          style={{ background: "none", border: "none", cursor: "pointer" }}
-        >
-          <Image
-            src="/images/commentdelete.png"
-            alt="삭제"
-            width={20}
-            height={20}
-          />
-        </button>
+          <button
+            onClick={() => setIsEdit(true)}
+            className={styles.button}
+          >
+            <Image
+              src="/images/commentedit.png"
+              alt="수정"
+              width={20}
+              height={20}
+            />
+          </button>
+          <button
+            onClick={() => onDelete(comment._id)}
+            className={styles.button}
+          >
+            <Image
+              src="/images/commentdelete.png"
+              alt="삭제"
+              width={20}
+              height={20}
+            />
+          </button>
+        </div>
       </div>
-      <div style={{ color: "#374151", lineHeight: 1.6 }}>{comment.contents}</div>
-      <div style={{ marginTop: 6, fontSize: 12, color: "#9CA3AF" }}>{date}</div>
+      <div className={styles.content}>{comment.contents}</div>
+      <div className={styles.date}>{date}</div>
     </li>
   );
 }

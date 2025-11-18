@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react"; // useEffect 추가
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { gql, useQuery, useMutation } from "@apollo/client";
-import InfiniteScroll from "react-infinite-scroll-component";
+import { FixedSizeList as List } from "react-window";
 import CommentListItem from "@/components/boards-detail/comment-list-item";
 import styles from "./styles.module.css";
 
@@ -37,11 +37,41 @@ interface BoardCommentItem {
   rating: number;
   createdAt: string;
 }
+
+interface RowProps {
+  index: number;
+  style: React.CSSProperties;
+  data: {
+    comments: BoardCommentItem[];
+    onDelete: (id: string) => void;
+    boardId: string;
+  };
+}
+
+const COMMENT_ITEM_HEIGHT = 120;
+const LIST_CONTAINER_HEIGHT = 600;
+
+const Row = ({ index, style, data }: RowProps) => {
+  const comment = data.comments[index];
+  if (!comment) return null;
+  
+  return (
+    <div style={style}>
+      <CommentListItem
+        comment={comment}
+        onDelete={data.onDelete}
+        boardId={data.boardId}
+      />
+    </div>
+  );
+};
+
 export default function CommentList(props: CommentListProps) {
   const { boardId, onRefetch } = props;
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
+  const listRef = useRef<List>(null);
 
   const { data, loading, error, refetch, fetchMore } = useQuery(FETCH_BOARD_COMMENTS_LIST, {
     variables: { boardId, page: 1 },
@@ -75,7 +105,9 @@ export default function CommentList(props: CommentListProps) {
     setHasMore(true); // hasMore 초기화
   }, [data]); // data 변경 시 초기화
 
-  const loadMore = async () => {
+  const loadMore = useCallback(async () => {
+    if (!hasMore) return;
+    
     const nextPage = page + 1;
     try {
       const { data: newData } = await fetchMore({
@@ -100,7 +132,24 @@ export default function CommentList(props: CommentListProps) {
     } catch {
       setHasMore(false);
     }
-  };
+  }, [boardId, page, hasMore, fetchMore]);
+
+  const handleItemsRendered = useCallback(
+    ({
+      visibleStopIndex,
+    }: {
+      overscanStartIndex: number;
+      overscanStopIndex: number;
+      visibleStartIndex: number;
+      visibleStopIndex: number;
+    }) => {
+      const totalItems = comments.length;
+      if (visibleStopIndex >= totalItems - 1 && hasMore) {
+        loadMore();
+      }
+    },
+    [comments.length, hasMore, loadMore]
+  );
 
   const handleDelete = async (id: string) => {
     const password = prompt("비밀번호를 입력하세요:");
@@ -140,26 +189,38 @@ export default function CommentList(props: CommentListProps) {
     return <div className="text-center mt-6 text-gray-400">등록된 댓글이 없습니다.</div>;
   }
 
+  const listHeight = Math.min(
+    LIST_CONTAINER_HEIGHT,
+    comments.length * COMMENT_ITEM_HEIGHT
+  );
+
   return (
-    <InfiniteScroll
-      dataLength={comments.length}
-      next={loadMore}
-      hasMore={hasMore}
-      loader={<div className="text-center mt-4 text-gray-500">로딩 중...</div>}
-      endMessage={<div className="text-center mt-4 text-gray-400">댓글 끝!</div>}
-      className={styles.contentContainer}
-    >
-      <h3 className={styles.postTitle} style={{ marginBottom: 12 }}>댓글</h3>
-      <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-        {comments.map((comment) => (
-          <CommentListItem
-            key={comment._id}
-            comment={comment}
-            onDelete={handleDelete}
-            boardId={boardId}
-          />
-        ))}
-      </ul>
-    </InfiniteScroll>
+    <div className={styles.contentContainer}>
+      <h3 className={styles.postTitle}>댓글</h3>
+      <div className={styles.listWrapper}>
+        <List
+          ref={listRef}
+          height={listHeight}
+          itemCount={comments.length}
+          itemSize={COMMENT_ITEM_HEIGHT}
+          width="100%"
+          itemData={{
+            comments,
+            onDelete: handleDelete,
+            boardId,
+          }}
+          onItemsRendered={handleItemsRendered}
+          className={styles.virtualizedList}
+        >
+          {Row}
+        </List>
+        {hasMore && comments.length > 0 && (
+          <div className={styles.loader}>로딩 중...</div>
+        )}
+        {!hasMore && comments.length > 0 && (
+          <div className={styles.endMessage}>댓글 끝!</div>
+        )}
+      </div>
+    </div>
   );
 }

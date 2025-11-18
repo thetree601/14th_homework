@@ -144,3 +144,5 @@ const onChangeFile = async (event: React.ChangeEvent<HTMLInputElement>, index: n
 - [ ] input 요소에 multiple 속성 추가 (선택사항)
 - [ ] 업로드 진행 상태 표시 (선택사항)
 
+
+

@@ -1,0 +1,96 @@
+# 댓글 목록 가상화(Virtualization) 및 무한 스크롤 통합 구현
+
+## 요구사항
+- `/boards/[boardId]` 상세 페이지의 댓글 목록에 react-window의 FixedSizeList를 적용하여 가상화 구현
+- 기존 react-infinite-scroll-component와 함께 동작하도록 통합
+- 댓글 목록이 한정된 영역 안에서 무한 스크롤되도록 구현
+
+## 기술 스택
+- react-window@1.8.10 (FixedSizeList 사용)
+- react-infinite-scroll-component (기존 무한 스크롤 유지)
+- Apollo Client (GraphQL 쿼리)
+- TypeScript
+
+## 구현 가이드
+
+### 1. 기본 구조
+- FixedSizeList는 고정된 높이의 아이템만 렌더링하므로, 댓글 아이템의 높이를 고정하거나 동적 높이를 처리해야 함
+- InfiniteScroll 컴포넌트 내부에 FixedSizeList를 배치하여 가상화 적용
+- 스크롤 이벤트를 감지하여 하단 도달 시 다음 페이지 로드
+
+### 2. 주요 구현 포인트
+
+#### 2.1 FixedSizeList 설정
+- `height`: 댓글 목록 컨테이너의 높이 (예: 600px 또는 viewport 기반 계산)
+- `itemCount`: 현재 로드된 댓글 개수
+- `itemSize`: 각 댓글 아이템의 고정 높이 (예: 120px)
+- `width`: 컨테이너 너비 (예: "100%")
+
+#### 2.2 무한 스크롤 통합
+- FixedSizeList의 `onItemsRendered` 콜백을 사용하여 스크롤 위치 감지
+- 마지막 아이템이 보일 때 `loadMore` 함수 호출
+- `hasMore` 상태에 따라 추가 데이터 로드
+
+#### 2.3 댓글 아이템 높이 처리
+- 각 댓글 아이템의 높이를 고정하거나
+- 동적 높이를 지원하려면 VariableSizeList 고려 (단, 성능상 FixedSizeList 권장)
+- 댓글 내용이 긴 경우 말줄임표 처리 또는 최대 높이 제한
+
+### 3. 코드 구조 예시
+
+```typescript
+import { FixedSizeList as List } from 'react-window';
+import InfiniteScroll from 'react-infinite-scroll-component';
+
+// FixedSizeList의 Row 컴포넌트
+const Row = ({ index, style, data }) => {
+  const comment = data.comments[index];
+  return (
+    <div style={style}>
+      <CommentListItem comment={comment} ... />
+    </div>
+  );
+};
+
+// InfiniteScroll과 FixedSizeList 통합
+<InfiniteScroll
+  dataLength={comments.length}
+  next={loadMore}
+  hasMore={hasMore}
+  loader={<div>로딩 중...</div>}
+  endMessage={<div>댓글 끝!</div>}
+  height={600} // 고정 높이 설정
+>
+  <List
+    height={600}
+    itemCount={comments.length}
+    itemSize={120} // 댓글 아이템 고정 높이
+    width="100%"
+    itemData={{ comments, onDelete, boardId }}
+  >
+    {Row}
+  </List>
+</InfiniteScroll>
+```
+
+### 4. 주의사항
+- FixedSizeList는 고정 높이가 필요하므로 댓글 아이템의 높이를 일관되게 유지해야 함
+- 댓글 내용이 길어질 경우 CSS로 높이 제한 또는 말줄임표 처리
+- 스크롤 위치가 변경될 때 InfiniteScroll의 스크롤 감지와 충돌하지 않도록 주의
+- 댓글 삭제/추가 시 리스트가 올바르게 업데이트되도록 처리
+
+### 5. 성능 최적화
+- 가상화로 인해 화면에 보이는 아이템만 렌더링되어 성능 향상
+- 대량의 댓글이 있어도 부드러운 스크롤 경험 제공
+- 메모리 사용량 감소
+
+### 6. 스타일링
+- FixedSizeList의 외부 컨테이너에 적절한 높이와 스크롤 스타일 적용
+- 댓글 아이템 간격과 패딩 일관성 유지
+- 반응형 디자인 고려 (모바일/데스크톱)
+
+## 참고사항
+- react-window 공식 문서: https://github.com/bvaughn/react-window
+- FixedSizeList는 모든 아이템이 동일한 높이일 때 가장 효율적
+- 동적 높이가 필요한 경우 VariableSizeList 고려하되, 성능 저하 가능성 있음
+
