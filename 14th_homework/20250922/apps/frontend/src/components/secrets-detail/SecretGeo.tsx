@@ -1,7 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
+import Script from "next/script";
 import styles from "./SecretGeo.module.css";
+
+declare global {
+	interface Window {
+		kakao: any;
+	}
+}
 
 interface SecretGeoProps {
 	address?: string;
@@ -20,6 +27,79 @@ export default function SecretGeo({
 }: SecretGeoProps) {
 	const hasAddress = address || postalCode || addressDetail;
 	const hasCoords = latitude || longitude;
+	const mapRef = useRef<any>(null);
+	const markerRef = useRef<any>(null);
+
+	const KAKAO_MAP_API_KEY =
+		process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY ||
+		"f9a89aef673fd594f7fef9f9892d883f";
+
+	const initMap = (lat: number, lng: number) => {
+		if (!window.kakao || !window.kakao.maps) return;
+
+		const container = document.getElementById("map");
+		if (!container) return;
+
+		// 기존 지도가 있으면 제거
+		if (mapRef.current) {
+			mapRef.current = null;
+		}
+
+		const options = {
+			center: new window.kakao.maps.LatLng(lat, lng),
+			level: 3,
+		};
+
+		const map = new window.kakao.maps.Map(container, options);
+		mapRef.current = map;
+
+		// 기존 마커가 있으면 제거
+		if (markerRef.current) {
+			markerRef.current.setMap(null);
+		}
+
+		// 마커 표시
+		const markerPosition = new window.kakao.maps.LatLng(lat, lng);
+		const marker = new window.kakao.maps.Marker({
+			position: markerPosition,
+		});
+		marker.setMap(map);
+		markerRef.current = marker;
+	};
+
+	// 좌표 변경 감지 및 지도 업데이트
+	useEffect(() => {
+		if (!window.kakao || !window.kakao.maps) return;
+
+		if (latitude && longitude) {
+			const lat = parseFloat(latitude);
+			const lng = parseFloat(longitude);
+
+			if (!isNaN(lat) && !isNaN(lng)) {
+				// 카카오 지도 API가 로드되었는지 확인
+				if (window.kakao.maps.load) {
+					window.kakao.maps.load(() => {
+						initMap(lat, lng);
+					});
+				} else {
+					initMap(lat, lng);
+				}
+			}
+		}
+	}, [latitude, longitude]);
+
+	// 컴포넌트 언마운트 시 정리
+	useEffect(() => {
+		return () => {
+			if (markerRef.current) {
+				markerRef.current.setMap(null);
+				markerRef.current = null;
+			}
+			if (mapRef.current) {
+				mapRef.current = null;
+			}
+		};
+	}, []);
 
 	if (!hasAddress && !hasCoords) {
 		return (
@@ -32,6 +112,24 @@ export default function SecretGeo({
 
 	return (
 		<section className={styles.geo} data-testid="secret-geo">
+			<Script
+				src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`}
+				strategy="lazyOnload"
+				onLoad={() => {
+					if (window.kakao && window.kakao.maps) {
+						window.kakao.maps.load(() => {
+							// 지도 초기화 로직 (좌표가 있을 때만)
+							if (latitude && longitude) {
+								const lat = parseFloat(latitude);
+								const lng = parseFloat(longitude);
+								if (!isNaN(lat) && !isNaN(lng)) {
+									initMap(lat, lng);
+								}
+							}
+						});
+					}
+				}}
+			/>
 			<h3 className={styles.sectionTitle}>비밀과 관련된 위치</h3>
 			<div className={styles.infoContainer}>
 				{hasAddress && (
@@ -83,6 +181,11 @@ export default function SecretGeo({
 					</div>
 				)}
 			</div>
+			{hasCoords && latitude && longitude && (
+				<div className={styles.mapContainer}>
+					<div id="map" className={styles.map}></div>
+				</div>
+			)}
 		</section>
 	);
 }

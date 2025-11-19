@@ -1,14 +1,25 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import Script from "next/script";
 import DaumPostcode from "react-daum-postcode";
 import { useModal } from "@/commons/providers/modal/modal.provider";
 import { authManager } from "@/lib/auth";
 import LoginModal from "@/components/secrets-list/modals/LoginModal";
 import styles from "./styles.module.css";
+
+// 카카오 지도 API 타입 정의
+declare global {
+  interface Window {
+    kakao: any;
+  }
+}
+
+// 카카오 지도 API 키
+const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || 'f9a89aef673fd594f7fef9f9892d883f';
 
 // 폼 데이터 타입
 export interface SecretsFormData {
@@ -22,7 +33,7 @@ export interface SecretsFormData {
   addressDetail: string;
   latitude: string;
   longitude: string;
-  image: FileList | null;
+  image: FileList | null | undefined; // undefined는 수정 모드에서 기존 이미지 유지를 의미
 }
 
 // Zod 스키마
@@ -63,7 +74,10 @@ export default function SecretsForm({
       : (propExistingImageUrl ? [propExistingImageUrl] : [])
   );
   const [isPostcodeModalOpen, setIsPostcodeModalOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isKakaoMapLoaded, setIsKakaoMapLoaded] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null) as React.MutableRefObject<HTMLInputElement | null>;
+  const mapRef = useRef<any>(null) as React.MutableRefObject<any>;
+  const markerRef = useRef<any>(null);
 
   const {
     register,
@@ -91,36 +105,25 @@ export default function SecretsForm({
   });
 
   const watchedImage = watch("image");
+  const watchedLatitude = watch("latitude");
+  const watchedLongitude = watch("longitude");
+  const watchedAddress = watch("address");
 
-  // 파일 선택 핸들러 (Controller의 onChange에서 호출됨)
-  const handleFileChange = (files: FileList | null) => {
-    if (files && files.length > 0) {
-      // 현재 이미지 개수 확인
-      const currentCount = existingImageUrls.length + previewUrls.length;
-      const maxAllowed = 3 - currentCount;
+  // 파일 선택 핸들러: 이제 제한된 FileList를 받음
+  const handleFileChange = (limitedFileList: FileList | null) => {
+    // 기존 미리보기 URL 해제
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
+
+    if (limitedFileList && limitedFileList.length > 0) {
+      // 새로운 미리보기 URL 생성
+      const newUrls = Array.from(limitedFileList).map(file => URL.createObjectURL(file));
       
-      // 최대 3개까지만 처리
-      const fileArray = Array.from(files).slice(0, maxAllowed);
-      
-      if (files.length > maxAllowed) {
-        alert(`이미지는 최대 3장까지 업로드 가능합니다. (현재 ${currentCount}장, 추가 가능 ${maxAllowed}장)`);
-      }
-      
-      // 모든 파일에 대해 미리보기 URL 생성
-      const newUrls = fileArray.map(file => URL.createObjectURL(file));
-      
-      // 기존 미리보기 URL은 유지하고 새 URL 추가
-      setPreviewUrls((prevUrls) => {
-        // 기존 URL은 유지 (기존 이미지와 병합)
-        return [...prevUrls, ...newUrls];
-      });
-      // existingImageUrls는 그대로 유지
+      // 새 URL 설정
+      setPreviewUrls(newUrls);
+
     } else {
-      // 파일이 없으면 새 미리보기만 제거 (기존 이미지는 유지)
-      setPreviewUrls((prevUrls) => {
-        prevUrls.forEach(url => URL.revokeObjectURL(url));
-        return [];
-      });
+      // 파일이 없으면 새 미리보기만 제거
+      setPreviewUrls([]);
     }
   };
 
@@ -141,12 +144,166 @@ export default function SecretsForm({
     }
   }, [mode, propExistingImageUrl]);
 
+  // 주소를 좌표로 변환하는 함수 (Geocoding)
+  const geocodeAddress = useCallback((address: string) => {
+    console.log('주소 변환 시작:', address);
+    
+    // 🟢 핵심 수정: 카카오 API 로드 상태를 체크하며 재시도하는 로직 추가
+    const checkKakaoLoad = (attempt = 0) => {
+        if (window.kakao && window.kakao.maps && window.kakao.maps.services) {
+            
+            // 이 시점에서 Geocoder 접근 가능
+            const geocoder = new window.kakao.maps.services.Geocoder();
+            geocoder.addressSearch(address, (result: any, status: any) => {
+                console.log('주소 변환 결과:', result, status);
+                if (status === window.kakao.maps.services.Status.OK) {
+                    const lat = result[0].y;
+                    const lng = result[0].x;
+                    console.log('변환된 좌표:', lat, lng);
+                    setValue("latitude", lat);
+                    setValue("longitude", lng);
+                } else {
+                    console.error('주소 변환 실패:', status);
+                }
+            });
+        } else if (attempt < 10) { // 최대 10번 (5초)까지 재시도
+            console.log(`카카오 지도 API 로드 대기 중... 재시도 ${attempt + 1}`);
+            setTimeout(() => checkKakaoLoad(attempt + 1), 500);
+        } else {
+            console.error('카카오 지도 API (services) 라이브러리 로드 시간 초과.');
+        }
+    };
+    
+    checkKakaoLoad(); // 체크 시작
+  }, [setValue]); // isKakaoMapLoaded 의존성 제거
+
+  // 지도 초기화 및 마커 표시 함수
+  const initMap = useCallback((latitude: number, longitude: number) => {
+    if (!isKakaoMapLoaded || !window.kakao || !window.kakao.maps) {
+      console.log('지도 초기화 실패: API가 로드되지 않음');
+      return;
+    }
+    
+    // 지도 컨테이너가 DOM에 있는지 확인
+    const container = document.getElementById('map');
+    if (!container) {
+      console.log('지도 컨테이너를 찾을 수 없음, 재시도 예정');
+      // 컨테이너가 없으면 잠시 후 다시 시도
+      setTimeout(() => {
+        initMap(latitude, longitude);
+      }, 100);
+      return;
+    }
+    
+    console.log('지도 초기화 시작:', latitude, longitude);
+    
+    // 기존 마커가 있으면 제거
+    if (markerRef.current) {
+      markerRef.current.setMap(null);
+      markerRef.current = null;
+    }
+    
+    const options = {
+      center: new window.kakao.maps.LatLng(latitude, longitude),
+      level: 3
+    };
+    
+    // 기존 지도가 있으면 재사용, 없으면 새로 생성
+    if (mapRef.current) {
+      mapRef.current.setCenter(new window.kakao.maps.LatLng(latitude, longitude));
+      console.log('기존 지도 중심 이동');
+    } else {
+      const map = new window.kakao.maps.Map(container, options);
+      mapRef.current = map;
+      console.log('새 지도 생성');
+    }
+    
+    // 마커 표시
+    const markerPosition = new window.kakao.maps.LatLng(latitude, longitude);
+    const marker = new window.kakao.maps.Marker({
+      position: markerPosition
+    });
+    marker.setMap(mapRef.current);
+    markerRef.current = marker;
+    console.log('마커 표시 완료');
+  }, [isKakaoMapLoaded]);
+
+  // 지도 업데이트 함수 (좌표 변경 시)
+  const updateMap = useCallback((latitude: number, longitude: number) => {
+    if (!isKakaoMapLoaded || !window.kakao || !window.kakao.maps) return;
+    
+    if (mapRef.current && markerRef.current) {
+      const moveLatLon = new window.kakao.maps.LatLng(latitude, longitude);
+      mapRef.current.setCenter(moveLatLon);
+      markerRef.current.setPosition(moveLatLon);
+    } else {
+      initMap(latitude, longitude);
+    }
+  }, [isKakaoMapLoaded, initMap]);
+
   // 컴포넌트 언마운트 시 메모리 정리만 수행
   useEffect(() => {
+    // 최신 값 참조를 위해 클로저에 저장
+    const currentPreviewUrls = previewUrls;
+    
     return () => {
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      currentPreviewUrls.forEach(url => URL.revokeObjectURL(url));
+      
+      // 지도 인스턴스 정리
+      if (markerRef.current) {
+        markerRef.current.setMap(null);
+        markerRef.current = null;
+      }
+      mapRef.current = null;
     };
-  }, []);
+  }, [previewUrls]); // ✅ previewUrls 추가: ESLint 경고 및 메모리 정리 보장
+
+  // 카카오 지도 API 로드 완료 핸들러
+  const handleKakaoMapLoad = () => {
+    console.log('카카오 지도 API 로드 시작');
+    if (window.kakao && window.kakao.maps) {
+      window.kakao.maps.load(() => {
+        if (window.kakao.maps.services) {
+            console.log('카카오 지도 API 로드 완료 (services 포함)');
+            setIsKakaoMapLoaded(true);
+        } else {
+             console.error('카카오 지도 API 로드 완료, 하지만 services 라이브러리가 누락되었습니다.'); 
+        }
+      });
+    } else {
+      console.error('카카오 지도 API를 찾을 수 없습니다');
+    }
+  };
+
+  // 주소 변경 시 좌표 변환 (주소가 변경되고 좌표가 없거나, 주소가 변경되었을 때)
+  useEffect(() => {
+    // 🟢 수정: isKakaoMapLoaded 조건 제거 (geocodeAddress가 내부적으로 로드 상태 체크)
+    if (watchedAddress && watchedAddress.trim() !== '') {
+      // debounce를 위해 setTimeout 사용
+      const timer = setTimeout(() => {
+        // 좌표가 없거나 주소가 변경되었을 때만 변환
+        if (!watchedLatitude || !watchedLongitude) {
+          geocodeAddress(watchedAddress);
+        }
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [watchedAddress, geocodeAddress, watchedLatitude, watchedLongitude]); // 🟢 isKakaoMapLoaded 의존성 제거
+
+  // 좌표 변경 시 지도 업데이트
+  useEffect(() => {
+    if (watchedLatitude && watchedLongitude && isKakaoMapLoaded) {
+      const lat = parseFloat(watchedLatitude);
+      const lng = parseFloat(watchedLongitude);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        // 지도 컨테이너가 렌더링된 후에 초기화
+        setTimeout(() => {
+          updateMap(lat, lng);
+        }, 100);
+      }
+    }
+  }, [watchedLatitude, watchedLongitude, isKakaoMapLoaded, updateMap]);
 
   // 이미지 제거 핸들러 (특정 인덱스의 이미지 제거)
   const handleRemoveImage = (index: number, isExisting: boolean) => {
@@ -159,23 +316,34 @@ export default function SecretsForm({
       });
     } else {
       // 새로 선택한 이미지 제거
-      setPreviewUrls((prevUrls) => {
-        const newUrls = [...prevUrls];
-        URL.revokeObjectURL(newUrls[index]);
-        newUrls.splice(index, 1);
-        return newUrls;
-      });
+      const currentFileList = watchedImage;
+      if (currentFileList && currentFileList.length > 0) {
+        const fileArray = Array.from(currentFileList);
+        const fileToRemove = fileArray[index];
+        URL.revokeObjectURL(URL.createObjectURL(fileToRemove)); 
+
+        fileArray.splice(index, 1); 
+
+        // 새로운 FileList 생성
+        const dataTransfer = new DataTransfer();
+        fileArray.forEach(file => dataTransfer.items.add(file));
+        const newFileList = dataTransfer.files;
+
+        setValue("image", newFileList, { shouldValidate: true });
+        handleFileChange(newFileList); // 미리보기 업데이트
+      }
     }
     
     // 모든 이미지가 제거된 경우
-    const remainingPreview = isExisting ? previewUrls : previewUrls.filter((_, i) => i !== index);
-    const remainingExisting = isExisting ? existingImageUrls.filter((_, i) => i !== index) : existingImageUrls;
+    const remainingPreviewCount = isExisting ? (watchedImage?.length || 0) : ((watchedImage?.length || 1) - 1);
+    const remainingExistingCount = isExisting ? (existingImageUrls.length - 1) : existingImageUrls.length;
     
-    if (remainingPreview.length === 0 && remainingExisting.length === 0) {
+    if (remainingPreviewCount === 0 && remainingExistingCount === 0) {
       setValue("image", null, { shouldValidate: false });
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+      setPreviewUrls([]); 
     }
   };
   
@@ -205,6 +373,11 @@ export default function SecretsForm({
     setValue("postalCode", data.zonecode);
     setValue("address", data.address);
     setIsPostcodeModalOpen(false);
+    
+    // 주소를 좌표로 변환
+    if (data.address) {
+      geocodeAddress(data.address);
+    }
   };
 
   // 모달 닫기 핸들러
@@ -213,28 +386,17 @@ export default function SecretsForm({
   };
 
   const handleFormSubmit = (data: SecretsFormData) => {
-    // 빈 FileList를 null로 변환 (수정 모드에서 이미지를 선택하지 않은 경우 처리)
     let processedData = { ...data };
     
-    // watch 값도 확인 (Controller가 저장한 값)
-    const currentImageValue = watch("image");
-    
-    // 중요: data.image가 없거나 비어있으면 watch 값 확인
-    if ((!data.image || (data.image instanceof FileList && data.image.length === 0)) && currentImageValue) {
-      processedData.image = currentImageValue;
-    }
-    
-    // 🔥 중요: 수정 모드에서 이미지를 선택하지 않았고 기존 이미지가 있으면 undefined로 설정
-    // (undefined면 updateSecret에서 기존 이미지를 유지함)
     const hasExistingImages = Array.isArray(propExistingImageUrl) 
       ? propExistingImageUrl.length > 0
       : !!propExistingImageUrl;
       
+    // 수정 모드에서 이미지를 새로 선택하지 않았고, 기존 이미지가 있다면 undefined (변경 없음)
     if (mode === "edit" && 
         (!processedData.image || (processedData.image instanceof FileList && processedData.image.length === 0)) &&
-        (currentImageValue === null || currentImageValue === undefined) &&
         hasExistingImages) {
-      processedData.image = undefined; // undefined = 변경 없음
+      processedData.image = undefined; 
     } else if (processedData.image && processedData.image instanceof FileList && processedData.image.length === 0) {
       // 빈 FileList를 null로 변환 (명시적으로 이미지를 제거한 경우)
       processedData.image = null;
@@ -248,6 +410,13 @@ export default function SecretsForm({
 
   return (
     <div className={styles.container} data-testid="secrets-form">
+      {/* 카카오 지도 API 스크립트 로드 */}
+      <Script
+        src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`}
+        strategy="lazyOnload"
+        onLoad={handleKakaoMapLoad}
+      />
+      
       <div className={styles.header}>
         <h1 className={styles.mainTitle}>{titleText}</h1>
       </div>
@@ -379,6 +548,11 @@ export default function SecretsForm({
                   />
                 </div>
               </div>
+              
+              {/* 카카오 지도 표시 영역 - 항상 렌더링하되, 지도 초기화는 조건부 */}
+              <div className={styles.mapContainer}>
+                <div id="map" className={styles.map}></div>
+              </div>
             </div>
 
             <div className={styles.fieldGroupFull}>
@@ -431,14 +605,14 @@ export default function SecretsForm({
                           <input
                             ref={(e) => {
                               fileInputRef.current = e;
-                              field.ref(e);
+                              field.ref(e); 
                             }}
                             onChange={(e) => {
                               const files = e.target.files;
                               
                               if (files && files.length > 0) {
                                 // 최대 3개까지만 처리
-                                const currentCount = existingImageUrls.length + previewUrls.length;
+                                const currentCount = existingImageUrls.length + (watchedImage?.length || 0);
                                 const maxAllowed = 3 - currentCount;
                                 const fileArray = Array.from(files).slice(0, maxAllowed);
                                 
@@ -446,11 +620,20 @@ export default function SecretsForm({
                                   alert(`이미지는 최대 3장까지 업로드 가능합니다. (현재 ${currentCount}장, 추가 가능 ${maxAllowed}장)`);
                                 }
                                 
-                                // FileList 객체를 그대로 저장
-                                field.onChange(files);
+                                // fileArray를 사용해서 새로운 FileList 생성
+                                const dataTransfer = new DataTransfer();
+                                // 기존 파일 + 새로 선택된 파일 병합 (다중 선택 시 누적 처리)
+                                const existingFiles = Array.from(watchedImage || []);
+                                const allFiles = [...existingFiles, ...fileArray];
+
+                                allFiles.forEach(file => dataTransfer.items.add(file));
+                                const limitedFileList = dataTransfer.files;
+                                
+                                // 제한된 FileList를 field.onChange에 직접 저장 
+                                field.onChange(limitedFileList);
                                 
                                 // 미리보기 업데이트
-                                handleFileChange(files);
+                                handleFileChange(limitedFileList);
                               } else {
                                 field.onChange(null);
                                 handleFileChange(null);
@@ -462,6 +645,7 @@ export default function SecretsForm({
                             accept="image/*"
                             multiple
                             data-testid="form-image"
+                            value="" 
                           />
                         );
                       }}
@@ -516,4 +700,3 @@ export default function SecretsForm({
     </div>
   );
 }
-

@@ -104,7 +104,12 @@ export async function createSecret(formData: SecretsFormData): Promise<{ success
 	try {
 		// 이미지 업로드 (최대 3개)
 		let imageUrls: string[] = [];
-		if (formData.image && formData.image.length > 0) {
+		
+		// updateSecret과 동일하게 FileList 체크
+		const hasImage = formData.image && 
+			(formData.image instanceof FileList ? formData.image.length > 0 : false);
+		
+		if (hasImage && formData.image instanceof FileList) {
 			// FileList를 배열로 변환하고 최대 3개까지만 처리
 			const filesToUpload = Array.from(formData.image).slice(0, 3);
 			

@@ -1,0 +1,238 @@
+# 다중 이미지 업로드 문제 분석 및 해결책
+
+## 문제 상황
+- `/secrets/new`에서 사진 여러 장을 올려도 상세 페이지에서 1장만 표시됨
+- 수파베이스에도 사진 배열에 주소 하나만 저장됨
+- 수정하기에서는 사진 여러 장이 정상적으로 업로드됨
+
+## 원인 분석
+
+### 핵심 문제
+**등록 모드에서 사용자가 여러 번 파일을 선택할 때, react-hook-form의 `image` 필드가 마지막 선택만 저장하고 이전 선택을 덮어쓰는 문제**
+
+### 상세 분석
+
+#### 1. 현재 코드 동작 흐름 (등록 모드)
+
+**파일 선택 시 (`secrets-form/index.tsx` 613-640줄):**
+```typescript
+onChange={(e) => {
+  const files = e.target.files;
+  
+  if (files && files.length > 0) {
+    const fileArray = Array.from(files).slice(0, maxAllowed);
+    const dataTransfer = new DataTransfer();
+    fileArray.forEach(file => dataTransfer.items.add(file));
+    const limitedFileList = dataTransfer.files;
+    
+    // ⚠️ 문제: 이전 FileList를 덮어씀
+    field.onChange(limitedFileList);
+    
+    // ✅ 미리보기는 누적됨
+    handleFileChange(limitedFileList);
+  }
+}}
+```
+
+**미리보기 업데이트 (`handleFileChange` 함수, 113-142줄):**
+```typescript
+const handleFileChange = (files: FileList | null) => {
+  if (files && files.length > 0) {
+    const newUrls = fileArray.map(file => URL.createObjectURL(file));
+    
+    // ✅ previewUrls는 누적됨 (기존 + 새로 추가)
+    setPreviewUrls((prevUrls) => {
+      return [...prevUrls, ...newUrls];
+    });
+  }
+};
+```
+
+**폼 제출 시 (`handleFormSubmit` 함수, 381-408줄):**
+```typescript
+const handleFormSubmit = (data: SecretsFormData) => {
+  // ⚠️ 문제: watch("image")는 마지막 선택만 반환
+  const currentImageValue = watch("image");
+  
+  if (currentImageValue && currentImageValue instanceof FileList && currentImageValue.length > 0) {
+    processedData.image = currentImageValue; // 마지막 선택만 전달됨
+  }
+  
+  onSubmit(processedData);
+};
+```
+
+#### 2. 문제 시나리오
+
+1. 사용자가 파일 1개 선택 → `previewUrls = [url1]`, `react-hook-form.image = FileList[file1]`
+2. 사용자가 파일 2개 추가 선택 → `previewUrls = [url1, url2, url3]`, `react-hook-form.image = FileList[file2, file3]` (file1 손실!)
+3. 폼 제출 → `watch("image")`는 `FileList[file2, file3]`만 반환
+4. 결과: file1이 손실되어 2개만 업로드됨
+
+#### 3. 수정 모드에서는 왜 작동하는가?
+
+수정 모드에서는 `existingImageUrls` state가 있어서 기존 이미지를 추적하고, 새로 선택한 파일만 react-hook-form에 저장합니다. 하지만 등록 모드에서는 `existingImageUrls`가 비어있어서 이전에 선택한 파일을 추적할 방법이 없습니다.
+
+## 해결책
+
+### 방법 1: File 객체를 state로 관리 (권장)
+
+`previewUrls`와 함께 실제 File 객체도 state로 관리하여, 제출 시 모든 파일을 FileList로 재구성합니다.
+
+#### 수정할 파일
+- `/src/components/secrets-form/index.tsx`
+
+#### 수정 내용
+
+1. **State 추가:**
+```typescript
+const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+const [selectedFiles, setSelectedFiles] = useState<File[]>([]); // ✅ 추가
+```
+
+2. **handleFileChange 함수 수정:**
+```typescript
+const handleFileChange = (files: FileList | null) => {
+  if (files && files.length > 0) {
+    const currentCount = existingImageUrls.length + previewUrls.length;
+    const maxAllowed = 3 - currentCount;
+    const fileArray = Array.from(files).slice(0, maxAllowed);
+    
+    const newUrls = fileArray.map(file => URL.createObjectURL(file));
+    
+    setPreviewUrls((prevUrls) => {
+      return [...prevUrls, ...newUrls];
+    });
+    
+    // ✅ File 객체도 함께 저장
+    setSelectedFiles((prevFiles) => {
+      return [...prevFiles, ...fileArray];
+    });
+  } else {
+    setPreviewUrls((prevUrls) => {
+      prevUrls.forEach(url => URL.revokeObjectURL(url));
+      return [];
+    });
+    setSelectedFiles([]); // ✅ File 객체도 초기화
+  }
+};
+```
+
+3. **handleRemoveImage 함수 수정:**
+```typescript
+const handleRemoveImage = (index: number, isExisting: boolean) => {
+  if (isExisting) {
+    setExistingImageUrls((prevUrls) => {
+      const newUrls = [...prevUrls];
+      newUrls.splice(index, 1);
+      return newUrls;
+    });
+  } else {
+    // ✅ previewUrls와 selectedFiles 동시 제거
+    setPreviewUrls((prevUrls) => {
+      const newUrls = [...prevUrls];
+      URL.revokeObjectURL(newUrls[index]);
+      newUrls.splice(index, 1);
+      return newUrls;
+    });
+    setSelectedFiles((prevFiles) => {
+      const newFiles = [...prevFiles];
+      newFiles.splice(index, 1);
+      return newFiles;
+    });
+  }
+  
+  // 모든 이미지가 제거된 경우
+  const remainingPreview = isExisting ? previewUrls : previewUrls.filter((_, i) => i !== index);
+  const remainingExisting = isExisting ? existingImageUrls.filter((_, i) => i !== index) : existingImageUrls;
+  
+  if (remainingPreview.length === 0 && remainingExisting.length === 0) {
+    setValue("image", null, { shouldValidate: false });
+    setSelectedFiles([]); // ✅ File 객체도 초기화
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+};
+```
+
+4. **handleFormSubmit 함수 수정:**
+```typescript
+const handleFormSubmit = (data: SecretsFormData) => {
+  let processedData = { ...data };
+  
+  // ✅ 등록 모드: selectedFiles에서 모든 파일을 FileList로 재구성
+  if (mode === "create") {
+    if (selectedFiles.length > 0) {
+      const dataTransfer = new DataTransfer();
+      selectedFiles.forEach(file => dataTransfer.items.add(file));
+      processedData.image = dataTransfer.files;
+    } else {
+      processedData.image = null;
+    }
+  } else {
+    // 수정 모드: 기존 로직 유지
+    const currentImageValue = watch("image");
+    
+    if (currentImageValue && currentImageValue instanceof FileList && currentImageValue.length > 0) {
+      processedData.image = currentImageValue;
+    } else {
+      const hasExistingImages = Array.isArray(propExistingImageUrl) 
+        ? propExistingImageUrl.length > 0
+        : !!propExistingImageUrl;
+      
+      if (hasExistingImages) {
+        processedData.image = undefined;
+      } else {
+        processedData.image = null;
+      }
+    }
+  }
+  
+  onSubmit(processedData);
+};
+```
+
+5. **컴포넌트 언마운트 시 정리:**
+```typescript
+useEffect(() => {
+  return () => {
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
+    setSelectedFiles([]); // ✅ File 객체도 정리
+    // ... 기존 코드
+  };
+}, []);
+```
+
+### 방법 2: Controller의 onChange에서 누적 관리 (대안)
+
+Controller의 onChange에서 이전 FileList와 새 FileList를 병합하는 방법도 있지만, FileList는 불변 객체이므로 DataTransfer를 사용해야 합니다.
+
+## 관련 파일
+
+1. **`/src/components/secrets-form/index.tsx`** - 메인 폼 컴포넌트
+   - `handleFileChange` 함수 (113-142줄)
+   - `handleFormSubmit` 함수 (381-408줄)
+   - `handleRemoveImage` 함수 (312-341줄)
+   - Controller의 onChange 핸들러 (613-640줄)
+
+2. **`/src/components/secrets-list/mutations.ts`** - 이미지 업로드 로직
+   - `createSecret` 함수 (103-181줄) - 이미 여러 파일 처리 로직이 있음
+   - `updateSecret` 함수 (184-334줄) - 정상 작동 중
+
+3. **`/src/components/secrets-new/index.tsx`** - 등록 페이지
+   - `handleSubmit` 함수 (12-31줄)
+
+## 테스트 시나리오
+
+1. 등록 모드에서 파일 1개 선택 → 미리보기 1개 표시
+2. 파일 2개 추가 선택 → 미리보기 3개 표시 (총 3개)
+3. 폼 제출 → 수파베이스에 3개 URL이 배열로 저장됨
+4. 상세 페이지에서 3개 이미지 모두 표시됨
+
+## 참고사항
+
+- `DataTransfer` API는 브라우저에서 FileList를 생성하는 표준 방법입니다.
+- `selectedFiles` state는 등록 모드에서만 사용되며, 수정 모드에서는 기존 로직을 유지합니다.
+- 메모리 누수를 방지하기 위해 `URL.revokeObjectURL`을 적절히 호출해야 합니다.
+

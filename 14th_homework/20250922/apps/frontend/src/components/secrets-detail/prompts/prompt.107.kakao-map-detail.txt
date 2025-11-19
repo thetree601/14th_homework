@@ -1,0 +1,216 @@
+# 상품 상세 페이지에 카카오 지도 표시 기능 추가
+
+## 목표
+등록된 상품의 상세 페이지에서 좌표를 조회해 카카오 지도에 표시하고, 마커로 위치를 보여주는 기능을 구현합니다.
+
+## 요구사항
+
+### 1. 카카오 지도 API 스크립트 로드
+- 위치: `/src/components/secrets-detail/SecretGeo.tsx`
+- Next.js의 `Script` 컴포넌트를 사용하여 카카오 지도 API 스크립트를 로드합니다.
+- 카카오 지도 API 키는 환경 변수(`NEXT_PUBLIC_KAKAO_MAP_API_KEY`)에서 가져옵니다.
+- **카카오 지도 JavaScript 키**: `f9a89aef673fd594f7fef9f9892d883f`
+- 스크립트는 `useEffect`를 사용하여 컴포넌트 마운트 시 로드합니다.
+- 스크립트 로드 완료 후 지도 초기화 함수를 호출합니다.
+- 스크립트 URL: `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${API_KEY}&libraries=services&autoload=false`
+- **중요**: `libraries=services` 파라미터를 반드시 포함해야 합니다. 이 파라미터가 없으면 지도 API가 제대로 로드되지 않을 수 있습니다.
+
+### 2. 지도 표시 영역 추가
+- 위치: `/src/components/secrets-detail/SecretGeo.tsx` (주소/좌표 정보 아래)
+- 위치: `/src/components/secrets-detail/SecretGeo.module.css` (지도 스타일)
+- 주소/좌표 정보 아래에 지도를 표시할 영역(`<div id="map">`)을 추가합니다.
+- 지도는 좌표(`latitude`, `longitude`)가 모두 있을 때만 표시됩니다 (조건부 렌더링).
+- 지도 컨테이너의 높이는 400px로 설정합니다.
+- 지도 컨테이너는 반응형으로 구현합니다 (모바일에서는 높이 조정).
+
+### 3. 지도 초기화 및 마커 표시
+- 위치: `/src/components/secrets-detail/SecretGeo.tsx`
+- `useEffect`를 사용하여:
+  1. 카카오 지도 API가 로드되었는지 확인
+  2. `latitude`와 `longitude` props가 모두 있을 때 지도를 초기화
+  3. 좌표를 숫자로 변환하여 지도 중심을 해당 좌표로 설정
+  4. 해당 위치에 마커를 표시
+- 지도 초기화는 `useRef`를 사용하여 지도 인스턴스를 저장합니다.
+- 마커는 기본 마커를 사용합니다.
+- 지도 레벨은 3으로 설정합니다 (적절한 확대 수준).
+
+### 4. 좌표 변경 시 지도 업데이트
+- 위치: `/src/components/secrets-detail/SecretGeo.tsx`
+- `latitude` 또는 `longitude` props가 변경되면:
+  1. 새로운 좌표로 지도 중심 이동
+  2. 기존 마커 제거 후 새로운 위치에 마커 표시
+- `useEffect`의 의존성 배열에 `latitude`와 `longitude`를 포함합니다.
+
+### 5. 지도 스타일링
+- 위치: `/src/components/secrets-detail/SecretGeo.module.css`
+- 지도 컨테이너 스타일:
+  - 배경: `#1b1b1b` (기존 컴포넌트 스타일과 일치)
+  - 테두리: `1px solid rgba(199, 167, 74, 0.2)` (기존 컴포넌트 스타일과 일치)
+  - 테두리 반경: `12px`
+  - 오버플로우: `hidden`
+  - 높이: `400px`
+  - 너비: `100%`
+- 지도가 표시되지 않을 때는 영역을 숨깁니다.
+- 모바일 반응형: `@media (max-width: 768px)`에서 높이를 `300px`로 조정합니다.
+
+## 구현 세부사항
+
+### 카카오 지도 API 스크립트 로드
+```typescript
+// Script 컴포넌트 import
+import Script from 'next/script';
+
+// 카카오 지도 API 키 (환경 변수 또는 직접 사용)
+const KAKAO_MAP_API_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || 'f9a89aef673fd594f7fef9f9892d883f';
+
+// 컴포넌트 내부에서 Script 컴포넌트 사용
+<Script
+  src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`}
+  strategy="lazyOnload"
+  onLoad={() => {
+    if (window.kakao && window.kakao.maps) {
+      window.kakao.maps.load(() => {
+        // 지도 초기화 로직 (좌표가 있을 때만)
+        if (latitude && longitude) {
+          initMap(parseFloat(latitude), parseFloat(longitude));
+        }
+      });
+    }
+  }}
+/>
+```
+
+### 지도 초기화 함수
+```typescript
+const mapRef = useRef<any>(null);
+const markerRef = useRef<any>(null);
+
+const initMap = (lat: number, lng: number) => {
+  if (!window.kakao || !window.kakao.maps) return;
+  
+  const container = document.getElementById('map');
+  if (!container) return;
+  
+  // 기존 지도가 있으면 제거
+  if (mapRef.current) {
+    mapRef.current = null;
+  }
+  
+  const options = {
+    center: new window.kakao.maps.LatLng(lat, lng),
+    level: 3
+  };
+  
+  const map = new window.kakao.maps.Map(container, options);
+  mapRef.current = map;
+  
+  // 기존 마커가 있으면 제거
+  if (markerRef.current) {
+    markerRef.current.setMap(null);
+  }
+  
+  // 마커 표시
+  const markerPosition = new window.kakao.maps.LatLng(lat, lng);
+  const marker = new window.kakao.maps.Marker({
+    position: markerPosition
+  });
+  marker.setMap(map);
+  markerRef.current = marker;
+};
+```
+
+### 좌표 변경 감지 및 지도 업데이트
+```typescript
+useEffect(() => {
+  if (!window.kakao || !window.kakao.maps) return;
+  
+  if (latitude && longitude) {
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+    
+    if (!isNaN(lat) && !isNaN(lng)) {
+      // 카카오 지도 API가 로드되었는지 확인
+      if (window.kakao.maps.load) {
+        window.kakao.maps.load(() => {
+          initMap(lat, lng);
+        });
+      } else {
+        initMap(lat, lng);
+      }
+    }
+  }
+}, [latitude, longitude]);
+```
+
+### 지도 표시 영역 추가
+```typescript
+// SecretGeo 컴포넌트의 return 문에 추가
+{hasCoords && latitude && longitude && (
+  <div className={styles.mapContainer}>
+    <div id="map" className={styles.map}></div>
+  </div>
+)}
+```
+
+### 타입 정의
+```typescript
+// window 객체에 kakao 타입 추가 (파일 상단)
+declare global {
+  interface Window {
+    kakao: any;
+  }
+}
+```
+
+## 파일 구조
+```
+src/
+├── components/
+│   └── secrets-detail/
+│       ├── SecretGeo.tsx          # 카카오 지도 연동 로직 추가
+│       ├── SecretGeo.module.css   # 지도 스타일 추가
+│       └── prompts/
+│           └── prompt.107.kakao-map-detail.txt
+```
+
+## 수정할 파일 목록
+
+### 1. `/src/components/secrets-detail/SecretGeo.tsx`
+- `Script` 컴포넌트 import 추가
+- `useRef`, `useEffect` hook 사용
+- 카카오 지도 API 스크립트 로드
+- 지도 초기화 함수 구현
+- 좌표 변경 감지 및 지도 업데이트 로직 추가
+- 지도 표시 영역 JSX 추가
+
+### 2. `/src/components/secrets-detail/SecretGeo.module.css`
+- `.mapContainer` 스타일 추가
+- `.map` 스타일 추가
+- 모바일 반응형 스타일 추가 (`@media` 쿼리)
+
+## 참고사항
+- **카카오 지도 JavaScript 키**: `f9a89aef673fd594f7fef9f9892d883f`
+- 카카오 지도 API 키는 `.env.local` 파일에 다음과 같이 설정하는 것을 권장합니다:
+  ```
+  NEXT_PUBLIC_KAKAO_MAP_API_KEY=f9a89aef673fd594f7fef9f9892d883f
+  ```
+- 환경 변수가 설정되지 않은 경우, 코드에서 직접 키를 사용할 수 있습니다 (개발 환경에서만).
+- 카카오 지도 API는 웹 플랫폼에서 사용 가능합니다.
+- 지도는 좌표(`latitude`, `longitude`)가 모두 있을 때만 표시됩니다.
+- 좌표가 없거나 유효하지 않은 경우 지도는 표시되지 않습니다.
+- 기존 주소/좌표 표시 기능은 그대로 유지합니다.
+- 카카오 지도 API 스크립트는 `autoload=false` 옵션을 사용하여 수동으로 로드합니다.
+- **중요**: 스크립트 URL에 `libraries=services` 파라미터를 반드시 포함해야 합니다. 이 파라미터가 없으면 지도 API가 제대로 로드되지 않을 수 있습니다.
+- 지도 인스턴스와 마커는 `useRef`로 관리하여 메모리 누수를 방지합니다.
+- 컴포넌트 언마운트 시 지도 인스턴스 정리 로직을 추가하는 것을 권장합니다.
+
+## 구현 순서
+1. `SecretGeo.tsx`에 필요한 import 추가 (`Script`, `useRef`, `useEffect`)
+2. 타입 정의 추가 (window.kakao)
+3. 카카오 지도 API 스크립트 로드 (`Script` 컴포넌트)
+4. 지도 초기화 함수 구현 (`initMap`)
+5. 좌표 변경 감지 및 지도 업데이트 (`useEffect`)
+6. 지도 표시 영역 JSX 추가
+7. `SecretGeo.module.css`에 지도 스타일 추가
+8. 모바일 반응형 스타일 추가
+

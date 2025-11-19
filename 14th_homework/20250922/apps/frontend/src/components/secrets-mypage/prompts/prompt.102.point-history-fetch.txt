@@ -112,3 +112,5 @@ const FETCH_USER_LOGGED_IN = graphql(`
 - 기존 `mockData`는 참고용으로 유지하되 실제 데이터 조회로 대체
 - 향후 `fetchPointTransactionsOfLoading` 쿼리를 추가하여 실제 충전 내역 목록을 표시할 수 있도록 확장 가능한 구조로 구현
 
+
+
