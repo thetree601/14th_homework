@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useQuery } from "@apollo/client";
 import { FETCH_USER_LOGGED_IN } from "@/commons/layout/navigation/queries";
@@ -9,8 +9,17 @@ import PasswordChange from "../password-change";
 import styles from "./styles.module.css";
 
 export default function UserInfo() {
+  const [mounted, setMounted] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    authManager.initializeToken();
+    setIsLoggedIn(authManager.isLoggedIn());
+  }, []);
+
   const { data, loading, error } = useQuery(FETCH_USER_LOGGED_IN, {
-    skip: !authManager.isLoggedIn(),
+    skip: !mounted || !isLoggedIn, // 클라이언트에서만 실행하여 Hydration 에러 방지
     errorPolicy: "ignore",
   });
 
@@ -20,6 +29,21 @@ export default function UserInfo() {
   const formatPrice = (price: number) => {
     return `₩${price.toLocaleString()}`;
   };
+
+  // 서버 사이드에서는 로딩 상태만 표시하여 Hydration 에러 방지
+  if (!mounted) {
+    return (
+      <section className={styles.userInfoSection}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>내 정보</h2>
+          <p className={styles.sectionSubtitle}>계정 정보를 확인하고 관리하세요</p>
+        </div>
+        <div className={styles.loadingContainer}>
+          <p className={styles.loadingText}>로딩 중...</p>
+        </div>
+      </section>
+    );
+  }
 
   if (loading) {
     return (

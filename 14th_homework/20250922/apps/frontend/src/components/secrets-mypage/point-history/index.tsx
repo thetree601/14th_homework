@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@apollo/client";
 import { FETCH_USER_LOGGED_IN } from "@/commons/layout/navigation/queries";
 import { authManager } from "@/lib/auth";
@@ -17,9 +17,17 @@ export interface PointTransaction {
 
 export default function PointHistory() {
   const [activeTab, setActiveTab] = useState<"charge" | "purchase">("charge");
+  const [mounted, setMounted] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    authManager.initializeToken();
+    setIsLoggedIn(authManager.isLoggedIn());
+  }, []);
 
   const { data, loading, error } = useQuery(FETCH_USER_LOGGED_IN, {
-    skip: !authManager.isLoggedIn(),
+    skip: !mounted || !isLoggedIn, // 클라이언트에서만 실행하여 Hydration 에러 방지
     errorPolicy: "all",
   });
 
@@ -40,6 +48,22 @@ export default function PointHistory() {
 
   const currentPointAmount = data?.fetchUserLoggedIn?.userPoint?.amount ?? 0;
   const currentHistory = activeTab === "charge" ? pointChargeHistory : pointPurchaseHistory;
+
+  // 서버 사이드에서는 로딩 상태만 표시하여 Hydration 에러 방지
+  if (!mounted) {
+    return (
+      <section className={styles.pointHistorySection}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>포인트 사용내역</h2>
+          <p className={styles.sectionSubtitle}>충전 및 구매 내역을 확인하세요</p>
+        </div>
+        <div className={styles.loadingContainer}>
+          <div className={styles.loadingSpinner}></div>
+          <p className={styles.loadingMessage}>포인트 정보를 불러오는 중...</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className={styles.pointHistorySection}>

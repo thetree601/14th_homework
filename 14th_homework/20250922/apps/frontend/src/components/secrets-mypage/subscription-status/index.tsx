@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { usePaymentSubscription } from "@/app/payments/hooks/index.payment.hook";
 import { usePaymentStatus } from "@/app/mypage/hooks/index.payment.status.hook";
 import { usePaymentCancel } from "@/app/mypage/hooks/index.payment.cancel.hook";
@@ -8,6 +8,12 @@ import { useModal } from "@/commons/providers/modal/modal.provider";
 import styles from "./styles.module.css";
 
 export default function SubscriptionStatus() {
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const { isProcessing, subscribe } = usePaymentSubscription();
   const { statusMessage, canCancel, canSubscribe, transactionKeyForCancel, isLoading: isStatusLoading } = usePaymentStatus();
   const { cancel, isProcessing: isCancelProcessing } = usePaymentCancel();
@@ -63,6 +69,28 @@ export default function SubscriptionStatus() {
       }
     }
   };
+
+  // 서버 사이드에서는 기본 구조만 표시하여 Hydration 에러 방지
+  if (!mounted) {
+    return (
+      <section className={styles.subscriptionSection}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>구독 상태</h2>
+          <p className={styles.sectionSubtitle}>현재 구독 상태를 확인하세요</p>
+        </div>
+        <div className={styles.subscriptionContainer}>
+          <div className={styles.statusCard}>
+            <div className={styles.statusContent}>
+              <div className={styles.statusLeft}>
+                <h3 className={styles.statusTitle}>구독 상태</h3>
+                <p className={styles.statusDescription}>로딩 중...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className={styles.subscriptionSection}>

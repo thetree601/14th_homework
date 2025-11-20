@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import UserInfo from "./user-info";
@@ -11,6 +11,14 @@ import styles from "./styles.module.css";
 
 export default function SecretsMyPage() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 클라이언트에서만 pathname 사용하여 Hydration 에러 방지
+  const currentPathname = mounted ? pathname : null;
 
   return (
     <div className={styles.container}>
@@ -18,13 +26,13 @@ export default function SecretsMyPage() {
         <div className={styles.navigation}>
           <Link 
             href="/secrets" 
-            className={`${styles.navLink} ${pathname === "/secrets" ? styles.active : ""}`}
+            className={`${styles.navLink} ${currentPathname === "/secrets" ? styles.active : ""}`}
           >
             비밀 게시판
           </Link>
           <Link 
             href="/secrets/mypage" 
-            className={`${styles.navLink} ${pathname === "/secrets/mypage" ? styles.active : ""}`}
+            className={`${styles.navLink} ${currentPathname === "/secrets/mypage" ? styles.active : ""}`}
           >
             마이 페이지
           </Link>

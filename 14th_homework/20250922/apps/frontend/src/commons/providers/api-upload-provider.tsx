@@ -10,6 +10,7 @@ import { onError } from "@apollo/client/link/error";
 import createUploadLink from "apollo-upload-client/createUploadLink.mjs";
 import { setContext } from "@apollo/client/link/context";
 import { authManager } from "@/lib/auth";
+import { getAccessToken } from "@/lib/refresh-token";
 import React from "react";
 
 export default function ApiUploadProvider(props) {
@@ -32,18 +33,39 @@ export default function ApiUploadProvider(props) {
     }
   });
 
-  // 에러 처리 링크 - 토큰 만료 시 처리
-  const errorLink = onError(({ graphQLErrors, networkError }) => {
+  // 에러 처리 링크 - 토큰 만료 시 자동 refresh
+  const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) => {
     if (graphQLErrors) {
-      graphQLErrors.forEach(({ message, extensions }) => {
+      for (const { message, extensions } of graphQLErrors) {
         // UNAUTHENTICATED 에러 처리 (토큰 만료 등)
         if (extensions?.code === 'UNAUTHENTICATED' || message.includes('토큰 만료')) {
-          console.warn('인증 토큰이 만료되었습니다.');
+          console.warn('인증 토큰이 만료되었습니다. Refresh Token으로 갱신 시도...');
           
-          // 토큰 제거 (리다이렉트는 컴포넌트에서 처리)
-          authManager.clearToken();
+          // Refresh Token으로 새 Access Token 발급 시도
+          return getAccessToken().then((newToken) => {
+            if (newToken) {
+              // 새 토큰으로 요청 재시도
+              const oldHeaders = operation.getContext().headers;
+              operation.setContext({
+                headers: {
+                  ...oldHeaders,
+                  authorization: `Bearer ${newToken}`,
+                },
+              });
+              return forward(operation);
+            } else {
+              // Refresh Token도 만료되었거나 유효하지 않은 경우
+              console.error('Refresh Token으로 Access Token 갱신 실패. 로그인이 필요합니다.');
+              authManager.clearToken();
+              return Promise.reject(new Error('세션이 만료되었습니다. 다시 로그인해주세요.'));
+            }
+          }).catch((error) => {
+            console.error('토큰 갱신 중 오류 발생:', error);
+            authManager.clearToken();
+            return Promise.reject(error);
+          });
         }
-      });
+      }
     }
 
     if (networkError) {
