@@ -1,0 +1,39 @@
+아래의 조건을 모두 적용하여, 아래의 요구사항을 모두 구현할 것.
+구현 결과를 체크리스트로 반환할 것.
+
+==============================================
+
+조건-파일경로) 수정될 파일경로: src/components/boards-detail/detail/index.tsx
+
+==============================================
+
+핵심요구사항) 게시판 상세페이지에서 react-quill 웹에디터로 작성된 HTML 내용을 제대로 렌더링할 것.
+
+핵심요구사항) 일반 텍스트 표시 대신 dangerouslySetInnerHTML을 사용하여 HTML 태그를 실제 태그로 변환할 것.
+
+구현방법)
+1. 현재 boardData.contents를 일반 텍스트로 표시하는 부분을 찾음
+2. dangerouslySetInnerHTML을 사용하여 HTML 내용이 제대로 렌더링되도록 변경
+3. HTML 태그가 포함된 내용이 실제 HTML 요소로 변환되어 표시됨
+
+주의사항)
+- dangerouslySetInnerHTML을 사용할 때는 XSS 공격에 주의해야 하지만, 현재 프로젝트에서는 신뢰할 수 있는 사용자 입력으로 가정
+- 기존 스타일이 유지되도록 CSS 클래스명은 변경하지 않음
+- HTML 내용이 없을 경우 빈 문자열로 처리
+
+예시코드구조:
+```typescript
+// 기존 코드
+<div className={styles.contents}>{boardData.contents}</div>
+
+// 변경 후 코드
+<div className={styles.contents} dangerouslySetInnerHTML={{ __html: boardData.contents || '' }} />
+```
+
+==============================================
+
+체크리스트:
+- [x] 기존 텍스트 표시 방식에서 dangerouslySetInnerHTML로 변경
+- [x] HTML 내용이 빈 문자열일 경우를 대비하여 || '' 처리
+- [x] CSS 클래스명 유지 확인
+- [x] 웹에디터에서 작성한 내용이 상세페이지에서 제대로 표시되는지 확인

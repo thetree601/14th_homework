@@ -126,6 +126,7 @@ export function useBoardsWrite(props: BoardsWriteProps) {
     reset,
     setError,
     clearErrors,
+    trigger,
   } = useForm<BoardWriteFormData | BoardEditFormData>({
     resolver: zodResolver(props.isEdit ? boardEditSchema : boardWriteSchema),
     defaultValues: {
@@ -200,6 +201,12 @@ export function useBoardsWrite(props: BoardsWriteProps) {
 
   const onChangeBoardAddressAddressDetail = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValue("boardAddress.addressDetail", event.target.value);
+  };
+
+  // ReactQuill의 onChange 콜백 - register를 사용할 수 없으므로 setValue와 trigger 사용
+  const onChangeContent = (value: string) => {
+    setValue("contents", value);
+    trigger("contents");
   };
 
   const onClickPostcodeSearch = () => {
@@ -428,5 +435,6 @@ export function useBoardsWrite(props: BoardsWriteProps) {
     onClickCancel,
     uploadFile,
     watch,
+    onChangeContent,
   };
 }

@@ -107,7 +107,7 @@ export default function BoardsDetail(props: BoardsDetailProps) {
             ))}
           </div>
         )}
-        <div className={styles.contents}>{boardData.contents}</div>
+        <div className={styles.contents} dangerouslySetInnerHTML={{ __html: boardData.contents || '' }} />
       </div>
 
       {boardData.youtubeUrl && (

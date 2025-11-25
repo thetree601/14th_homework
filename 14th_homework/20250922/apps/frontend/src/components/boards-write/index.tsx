@@ -1,12 +1,17 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import DaumPostcode from "react-daum-postcode";
 import type { BoardsWriteProps } from "./types";
 import { useBoardsWrite } from "./hook";
 import styles from "./styles.module.css";
 import { Modal, Box, Typography, Button, TextField } from "@mui/material";
 import { checkValidationFile } from "@/commons/libraries/image-validation";
+import "react-quill/dist/quill.snow.css";
+
+// 코드 스플리팅 - SSR 방지
+const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 // 모달 스타일 정의
 const modalStyle = {
@@ -55,6 +60,7 @@ export default function BoardsWrite(props: BoardsWriteProps) {
     onChangePromptInput,
     uploadFile,
     watch,
+    onChangeContent,
   } = useBoardsWrite(props);
 
   // 이미지 업로드 관련 ref
@@ -193,11 +199,12 @@ export default function BoardsWrite(props: BoardsWriteProps) {
 
       <div className={`${styles.formGroup} ${styles.noBorder}`}>
         <label className={styles.labelRequired}>내용</label>
-        <textarea
-          className={styles.textareaField}
+        <ReactQuill
+          value={watch("contents") || ""}
+          onChange={onChangeContent}
           placeholder="내용을 입력해 주세요."
-          {...register("contents")}
-        ></textarea>
+          style={{ minHeight: "400px" }}
+        />
         {errors.contents && <div className={styles.errorMessage}>{errors.contents.message}</div>}
       </div>
 
