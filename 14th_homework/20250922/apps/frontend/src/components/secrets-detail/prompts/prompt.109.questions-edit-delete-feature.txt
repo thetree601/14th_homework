@@ -1,0 +1,641 @@
+# 문의하기 댓글 수정/삭제 기능 구현 가이드
+
+## 개요
+/secrets 상세페이지의 문의하기 기능에 댓글 수정 및 삭제 기능을 추가합니다. 각 문의 항목에 수정/삭제 아이콘을 추가하여 사용자가 자신이 작성한 문의를 수정하거나 삭제할 수 있도록 합니다.
+
+## 핵심 요구사항
+
+### 1. 데이터 구조
+- 기존 Question 인터페이스 유지
+- questions 배열 내 특정 항목을 id로 식별하여 수정/삭제
+- 수정 시 updatedAt 필드는 추가하지 않음 (기존 createdAt 유지)
+
+### 2. 기능 요구사항
+
+#### 2.1 문의 수정
+- 각 문의 항목에 수정 아이콘 표시
+- 수정 아이콘 클릭 시 해당 문의 내용을 편집 가능한 상태로 전환
+- 수정 모드에서는 텍스트 입력 필드와 저장/취소 버튼 표시
+- 저장 시 questions 배열에서 해당 항목의 content 업데이트
+- 취소 시 수정 모드 해제 및 원래 내용으로 복원
+- 수정 후 즉시 목록에 반영되어야 함
+
+#### 2.2 문의 삭제
+- 각 문의 항목에 삭제 아이콘 표시
+- 삭제 아이콘 클릭 시 삭제 확인 모달 또는 확인 다이얼로그 표시
+- 확인 시 questions 배열에서 해당 항목 제거
+- 삭제 후 즉시 목록에 반영되어야 함
+
+### 3. UI/UX 요구사항
+
+#### 3.1 아이콘 배치
+- 각 문의 항목의 우측 상단 또는 하단에 수정/삭제 아이콘 배치
+- 아이콘은 hover 시 시각적 피드백 제공
+- 아이콘 크기는 적절하게 조정 (16px ~ 20px 권장)
+- 아이콘 간 간격 유지 (8px ~ 12px)
+
+#### 3.2 아이콘 파일 경로
+- 수정 아이콘: `/images/edit.png`
+- 삭제 아이콘: `/images/delete2.png`
+- Next.js Image 컴포넌트 또는 img 태그 사용
+
+#### 3.3 수정 모드 UI
+- 수정 모드 진입 시 해당 문의 항목의 content가 편집 가능한 텍스트 영역으로 전환
+- textarea 또는 input 필드 사용 (기존 QuestionForm과 유사한 스타일)
+- 저장 버튼과 취소 버튼 표시
+- 수정 모드에서는 다른 문의 항목의 수정/삭제 아이콘 비활성화 또는 숨김 처리
+
+#### 3.4 삭제 확인
+- 삭제 아이콘 클릭 시 확인 다이얼로그 표시
+- "정말 삭제하시겠습니까?" 메시지와 함께 확인/취소 버튼 제공
+- 기존 DeleteConfirmModal 컴포넌트 활용 가능
+
+### 4. 기술 요구사항
+
+#### 4.1 데이터 수정
+- mutations.ts에 updateQuestion 함수 추가
+- Supabase의 update를 사용하여 questions 배열에서 특정 id의 항목 찾아 content 업데이트
+- 배열 내 항목 수정 시 불변성 유지
+
+#### 4.2 데이터 삭제
+- mutations.ts에 deleteQuestion 함수 추가
+- Supabase의 update를 사용하여 questions 배열에서 특정 id의 항목 제거
+- 배열 필터링을 통해 해당 항목 제외한 새 배열 생성
+
+#### 4.3 컴포넌트 구조
+- QuestionsList 컴포넌트 확장하여 수정/삭제 기능 추가
+- 각 문의 항목에 수정/삭제 핸들러 전달
+- 수정 모드 상태 관리 (어떤 문의가 수정 중인지 추적)
+- SecretComments 컴포넌트에서 수정/삭제 핸들러 구현 및 전달
+
+### 5. 구현 파일
+
+#### 5.1 수정할 파일
+- `components/secrets-detail/mutations.ts` - updateQuestion, deleteQuestion 함수 추가
+- `components/secrets-detail/QuestionsList.tsx` - 수정/삭제 아이콘 및 기능 추가
+- `components/secrets-detail/QuestionsList.module.css` - 아이콘 및 수정 모드 스타일 추가
+- `components/secrets-detail/SecretComments.tsx` - 수정/삭제 핸들러 추가 및 전달
+
+#### 5.2 새로 생성할 파일 (선택사항)
+- `components/secrets-detail/QuestionItem.tsx` - 개별 문의 항목 컴포넌트 분리 (복잡도 증가 시)
+
+### 6. 데이터베이스 스키마
+- 기존 구조 유지 (변경 없음)
+- questions: JSONB | null
+- Question 인터페이스:
+  ```typescript
+  interface Question {
+    id: string;           // 고유 식별자
+    content: string;      // 문의 내용
+    createdAt: string;    // 생성 시간 (ISO 8601)
+  }
+  ```
+
+### 7. 구현 예시 코드 구조
+
+#### 7.1 mutations.ts - 문의 수정
+```typescript
+export async function updateQuestion(
+  secretId: string,
+  questionId: string,
+  newContent: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 1. 기존 questions 조회
+    const { data: secretData, error: fetchError } = await supabase
+      .from('secrets')
+      .select('questions')
+      .eq('id', secretId)
+      .single();
+    
+    if (fetchError) {
+      return { success: false, error: fetchError.message };
+    }
+    
+    // 2. questions 배열에서 해당 항목 찾아 수정
+    const existingQuestions: Question[] = secretData.questions || [];
+    const updatedQuestions = existingQuestions.map(question => 
+      question.id === questionId
+        ? { ...question, content: newContent.trim() }
+        : question
+    );
+    
+    // 3. 업데이트
+    const { error: updateError } = await supabase
+      .from('secrets')
+      .update({ questions: updatedQuestions })
+      .eq('id', secretId);
+    
+    if (updateError) {
+      return { success: false, error: updateError.message };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('문의 수정 중 오류 발생:', error);
+    return { success: false, error: '문의 수정 중 오류가 발생했습니다.' };
+  }
+}
+```
+
+#### 7.2 mutations.ts - 문의 삭제
+```typescript
+export async function deleteQuestion(
+  secretId: string,
+  questionId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 1. 기존 questions 조회
+    const { data: secretData, error: fetchError } = await supabase
+      .from('secrets')
+      .select('questions')
+      .eq('id', secretId)
+      .single();
+    
+    if (fetchError) {
+      return { success: false, error: fetchError.message };
+    }
+    
+    // 2. questions 배열에서 해당 항목 제거
+    const existingQuestions: Question[] = secretData.questions || [];
+    const updatedQuestions = existingQuestions.filter(
+      question => question.id !== questionId
+    );
+    
+    // 3. 업데이트
+    const { error: updateError } = await supabase
+      .from('secrets')
+      .update({ questions: updatedQuestions })
+      .eq('id', secretId);
+    
+    if (updateError) {
+      return { success: false, error: updateError.message };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('문의 삭제 중 오류 발생:', error);
+    return { success: false, error: '문의 삭제 중 오류가 발생했습니다.' };
+  }
+}
+```
+
+#### 7.3 QuestionsList.tsx - 수정/삭제 기능 추가
+```typescript
+"use client";
+
+import React, { useState } from "react";
+import Image from "next/image";
+import styles from "./QuestionsList.module.css";
+import { Question } from "./mutations";
+
+interface QuestionsListProps {
+  questions: Question[];
+  onEdit?: (questionId: string, newContent: string) => Promise<void>;
+  onDelete?: (questionId: string) => Promise<void>;
+}
+
+export default function QuestionsList({ 
+  questions, 
+  onEdit, 
+  onDelete 
+}: QuestionsListProps) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleEditClick = (question: Question) => {
+    setEditingId(question.id);
+    setEditContent(question.content);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditContent("");
+  };
+
+  const handleSaveEdit = async (questionId: string) => {
+    if (!onEdit) return;
+    
+    setIsSubmitting(true);
+    try {
+      await onEdit(questionId, editContent);
+      setEditingId(null);
+      setEditContent("");
+    } catch (error) {
+      console.error("수정 중 오류:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteClick = async (questionId: string) => {
+    if (!onDelete) return;
+    
+    const confirmed = window.confirm("정말 삭제하시겠습니까?");
+    if (confirmed) {
+      try {
+        await onDelete(questionId);
+      } catch (error) {
+        console.error("삭제 중 오류:", error);
+      }
+    }
+  };
+
+  if (questions.length === 0) {
+    return (
+      <div className={styles.empty} data-testid="questions-empty">
+        <p className={styles.emptyText}>아직 문의가 없습니다.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.list} data-testid="questions-list">
+      {questions.map((question) => (
+        <div key={question.id} className={styles.item} data-testid={`question-${question.id}`}>
+          {editingId === question.id ? (
+            // 수정 모드
+            <div className={styles.editMode}>
+              <textarea
+                className={styles.editTextarea}
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                rows={3}
+                data-testid={`question-edit-textarea-${question.id}`}
+              />
+              <div className={styles.editActions}>
+                <button
+                  type="button"
+                  className={styles.cancelBtn}
+                  onClick={handleCancelEdit}
+                  data-testid={`question-cancel-edit-${question.id}`}
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  className={styles.saveBtn}
+                  onClick={() => handleSaveEdit(question.id)}
+                  disabled={isSubmitting || !editContent.trim()}
+                  data-testid={`question-save-edit-${question.id}`}
+                >
+                  {isSubmitting ? "저장 중..." : "저장"}
+                </button>
+              </div>
+            </div>
+          ) : (
+            // 일반 모드
+            <>
+              <div className={styles.content}>{question.content}</div>
+              <div className={styles.footer}>
+                <div className={styles.time}>{formatRelativeTime(question.createdAt)}</div>
+                <div className={styles.actions}>
+                  {onEdit && (
+                    <button
+                      type="button"
+                      className={styles.actionBtn}
+                      onClick={() => handleEditClick(question)}
+                      data-testid={`question-edit-button-${question.id}`}
+                      aria-label="수정"
+                    >
+                      <Image
+                        src="/images/edit.png"
+                        alt="수정"
+                        width={16}
+                        height={16}
+                      />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      type="button"
+                      className={styles.actionBtn}
+                      onClick={() => handleDeleteClick(question.id)}
+                      data-testid={`question-delete-button-${question.id}`}
+                      aria-label="삭제"
+                    >
+                      <Image
+                        src="/images/delete2.png"
+                        alt="삭제"
+                        width={16}
+                        height={16}
+                      />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+#### 7.4 SecretComments.tsx - 수정/삭제 핸들러 추가
+```typescript
+"use client";
+
+import React, { useState, useEffect } from "react";
+import styles from "./SecretComments.module.css";
+import QuestionForm from "./QuestionForm";
+import QuestionsList from "./QuestionsList";
+import { createQuestion, updateQuestion, deleteQuestion, Question } from "./mutations";
+
+interface SecretCommentsProps {
+  secretId: string;
+  questions?: Question[];
+}
+
+export default function SecretComments({ secretId, questions = [] }: SecretCommentsProps) {
+  const [localQuestions, setLocalQuestions] = useState<Question[]>(questions);
+  const [showForm, setShowForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLocalQuestions(questions);
+  }, [questions]);
+
+  const handleQuestionSubmit = async (content: string) => {
+    setError(null);
+    const result = await createQuestion(secretId, content);
+    
+    if (result.success) {
+      const newQuestion: Question = {
+        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+        content: content.trim(),
+        createdAt: new Date().toISOString(),
+      };
+      setLocalQuestions((prev) => [...prev, newQuestion]);
+      setShowForm(false);
+    } else {
+      setError(result.error || "문의 등록에 실패했습니다.");
+    }
+  };
+
+  const handleQuestionEdit = async (questionId: string, newContent: string) => {
+    setError(null);
+    const result = await updateQuestion(secretId, questionId, newContent);
+    
+    if (result.success) {
+      setLocalQuestions((prev) =>
+        prev.map((q) =>
+          q.id === questionId ? { ...q, content: newContent.trim() } : q
+        )
+      );
+    } else {
+      setError(result.error || "문의 수정에 실패했습니다.");
+      throw new Error(result.error || "문의 수정에 실패했습니다.");
+    }
+  };
+
+  const handleQuestionDelete = async (questionId: string) => {
+    setError(null);
+    const result = await deleteQuestion(secretId, questionId);
+    
+    if (result.success) {
+      setLocalQuestions((prev) => prev.filter((q) => q.id !== questionId));
+    } else {
+      setError(result.error || "문의 삭제에 실패했습니다.");
+      throw new Error(result.error || "문의 삭제에 실패했습니다.");
+    }
+  };
+
+  const sortedQuestions = [...localQuestions].sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  return (
+    <section className={styles.comments} data-testid="secret-comments">
+      <h3 className={styles.title}>문의하기 · 댓글</h3>
+      <QuestionsList 
+        questions={sortedQuestions}
+        onEdit={handleQuestionEdit}
+        onDelete={handleQuestionDelete}
+      />
+      {error && (
+        <div className={styles.errorMessage} data-testid="question-error-message">
+          {error}
+        </div>
+      )}
+      {showForm ? (
+        <QuestionForm
+          onSubmit={handleQuestionSubmit}
+          onCancel={() => {
+            setShowForm(false);
+            setError(null);
+          }}
+        />
+      ) : (
+        <button
+          type="button"
+          className={styles.inquiryBtn}
+          onClick={() => setShowForm(true)}
+          data-testid="comments-inquiry-button"
+        >
+          문의하기
+        </button>
+      )}
+    </section>
+  );
+}
+```
+
+#### 7.5 QuestionsList.module.css - 스타일 추가
+```css
+/* 기존 스타일 유지 */
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(199, 167, 74, 0.05);
+  border: 1px solid rgba(199, 167, 74, 0.15);
+  position: relative;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actionBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.actionBtn:hover {
+  opacity: 1;
+}
+
+.actionBtn:active {
+  opacity: 0.5;
+}
+
+.editMode {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editTextarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(27, 27, 27, 0.6);
+  border: 1px solid rgba(199, 167, 74, 0.3);
+  color: #e0e0e0;
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.editTextarea:focus {
+  outline: none;
+  border-color: rgba(199, 167, 74, 0.5);
+}
+
+.editActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.cancelBtn,
+.saveBtn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.cancelBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #aaa;
+}
+
+.cancelBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.saveBtn {
+  background: rgba(199, 167, 74, 0.3);
+  color: #e0e0e0;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: rgba(199, 167, 74, 0.4);
+}
+
+.saveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+```
+
+### 8. 주의사항
+
+#### 8.1 사용자 인증 없음
+- 현재 구현은 로그인 없이 동작하므로 모든 사용자가 모든 문의를 수정/삭제할 수 있음
+- 향후 작성자 정보 추가 시 본인 작성 문의만 수정/삭제 가능하도록 제한 필요
+
+#### 8.2 데이터 동기화
+- 수정/삭제 후 페이지 새로고침 없이 목록에 반영
+- React 상태 관리 활용 (useState)
+- 낙관적 업데이트(Optimistic Update) 고려 가능
+
+#### 8.3 에러 처리
+- 수정/삭제 실패 시 사용자에게 에러 메시지 표시
+- 네트워크 오류 등 예외 상황 처리
+- 수정 모드에서 에러 발생 시 수정 모드 유지 또는 취소 처리
+
+#### 8.4 UX 고려사항
+- 수정 모드에서는 다른 문의 항목의 수정/삭제 비활성화
+- 삭제 전 확인 다이얼로그로 실수 방지
+- 로딩 상태 표시 (저장 중, 삭제 중 등)
+- 수정/삭제 성공 시 피드백 제공 (선택사항)
+
+#### 8.5 아이콘 접근성
+- 아이콘 버튼에 aria-label 추가
+- 키보드 접근성 고려 (tab, enter 키 지원)
+
+### 9. 스타일 가이드
+
+#### 9.1 디자인 일관성
+- 기존 SecretComments 스타일과 일관성 유지
+- 골드 색상 테마 (#c7a74a) 활용
+- 다크 모드 배경 (rgba(27, 27, 27, 0.8)) 활용
+
+#### 9.2 아이콘 스타일
+- 아이콘 크기: 16px ~ 20px
+- hover 시 opacity 변화로 피드백 제공
+- 아이콘 간 간격: 8px ~ 12px
+
+#### 9.3 수정 모드 스타일
+- 기존 QuestionForm과 유사한 스타일 적용
+- textarea는 기존 content 영역과 유사한 스타일
+- 버튼은 기존 폼 버튼과 일관성 유지
+
+### 10. 테스트 고려사항
+
+#### 10.1 기능 테스트
+- 문의 수정 기능 테스트
+- 문의 삭제 기능 테스트
+- 수정 취소 기능 테스트
+- 빈 내용으로 수정 시도 시 유효성 검사 테스트
+- 삭제 확인 다이얼로그 동작 테스트
+
+#### 10.2 에러 케이스 테스트
+- 네트워크 오류 시 처리
+- 데이터베이스 오류 시 처리
+- 존재하지 않는 questionId로 수정/삭제 시도 시 처리
+
+#### 10.3 UI 테스트
+- 수정 모드 전환 테스트
+- 아이콘 hover 효과 테스트
+- 반응형 디자인 테스트
+
+## 구현 체크리스트
+
+- [ ] mutations.ts에 updateQuestion 함수 추가
+- [ ] mutations.ts에 deleteQuestion 함수 추가
+- [ ] QuestionsList.tsx에 수정/삭제 아이콘 추가
+- [ ] QuestionsList.tsx에 수정 모드 상태 관리 추가
+- [ ] QuestionsList.tsx에 수정/삭제 핸들러 구현
+- [ ] QuestionsList.module.css에 아이콘 및 수정 모드 스타일 추가
+- [ ] SecretComments.tsx에 수정/삭제 핸들러 추가
+- [ ] SecretComments.tsx에서 QuestionsList에 핸들러 전달
+- [ ] 삭제 확인 다이얼로그 구현 또는 window.confirm 사용
+- [ ] 에러 처리 및 사용자 피드백
+- [ ] 로딩 상태 표시
+- [ ] 접근성 개선 (aria-label 등)
+
+## 참고 파일
+- `components/secrets-detail/SecretComments.tsx` - 메인 컴포넌트
+- `components/secrets-detail/QuestionsList.tsx` - 문의 목록 컴포넌트
+- `components/secrets-detail/QuestionsList.module.css` - 문의 목록 스타일
+- `components/secrets-detail/mutations.ts` - 데이터 변경 함수
+- `components/secrets-detail/prompts/prompt.108.questions-feature.txt` - 문의하기 기능 구현 가이드
+- `/public/images/edit.png` - 수정 아이콘
+- `/public/images/delete2.png` - 삭제 아이콘
+

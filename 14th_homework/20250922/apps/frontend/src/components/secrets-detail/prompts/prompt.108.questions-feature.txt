@@ -1,0 +1,275 @@
+# 문의하기 기능 구현 가이드
+
+## 개요
+/secrets 상세페이지에서 문의하기 기능을 구현합니다. 기존 secrets 테이블에 추가된 questions 컬럼을 활용하여 문의 등록 및 조회 기능을 제공합니다.
+
+## 핵심 요구사항
+
+### 1. 데이터 구조
+- secrets 테이블의 questions 컬럼을 활용
+- questions는 JSONB 배열 형태로 저장됨 
+- 각 문의 항목은 다음 필드를 포함:
+  - id: 고유 식별자 (UUID 또는 타임스탬프 기반)
+  - content: 문의 내용 (string)
+  - createdAt: 생성 시간 (ISO 8601 형식)
+  - 작성자 정보는 저장하지 않음 (로그인 없이 구현)
+
+### 2. 기능 요구사항
+
+#### 2.1 문의 등록
+- 상세페이지 내에서 문의 내용을 입력받아 등록
+- 로그인한 유저의 id를 받아오지 않음 (익명 문의)
+- 문의 등록 시 questions 배열에 새 항목 추가
+- 등록 후 즉시 목록에 반영되어야 함
+
+#### 2.2 문의 조회
+- 해당 secret의 questions 배열을 조회하여 표시
+- 최신순으로 정렬하여 표시
+- 문의가 없을 경우 적절한 안내 메시지 표시
+
+### 3. UI/UX 요구사항
+
+#### 3.1 문의 목록 표시
+- SecretComments 컴포넌트 내에 문의 목록 표시
+- 각 문의 항목은 다음 정보 표시:
+  - 문의 내용
+  - 작성 시간 (상대 시간 또는 절대 시간)
+- 문의 목록은 스크롤 가능한 영역으로 구성
+
+#### 3.2 문의 작성 폼
+- 문의하기 버튼 클릭 시 문의 작성 폼 표시
+- 텍스트 입력 필드 (textarea 또는 input)
+- 등록 버튼 및 취소 버튼
+- 폼 제출 시 유효성 검사 (빈 값 체크 등)
+
+### 4. 기술 요구사항
+
+#### 4.1 데이터 조회
+- queries.ts에 문의 조회 함수 추가
+- fetchSecretById 함수에서 questions 필드도 함께 조회
+- questions가 null이거나 빈 배열인 경우 처리
+
+#### 4.2 데이터 등록
+- mutations.ts에 문의 등록 함수 추가
+- Supabase의 update를 사용하여 questions 배열에 새 항목 추가
+- 기존 questions 배열이 null이거나 없는 경우 새 배열로 초기화
+
+#### 4.3 컴포넌트 구조
+- SecretComments 컴포넌트를 확장하여 구현
+- 문의 목록 표시 컴포넌트 (QuestionsList)
+- 문의 작성 폼 컴포넌트 (QuestionForm)
+- 필요시 모달 컴포넌트 활용
+
+### 5. 구현 파일
+
+#### 5.1 수정할 파일
+- `components/secrets-detail/SecretComments.tsx` - 메인 컴포넌트
+- `components/secrets-detail/SecretComments.module.css` - 스타일
+- `components/secrets-list/queries.ts` - 문의 조회 함수 추가
+- `components/secrets-detail/mutations.ts` - 문의 등록 함수 추가
+- `components/secrets-detail/SecretDetail.tsx` - questions 필드 타입 추가
+
+#### 5.2 새로 생성할 파일 (선택사항)
+- `components/secrets-detail/QuestionsList.tsx` - 문의 목록 컴포넌트
+- `components/secrets-detail/QuestionForm.tsx` - 문의 작성 폼 컴포넌트
+- `components/secrets-detail/QuestionsList.module.css` - 문의 목록 스타일
+- `components/secrets-detail/QuestionForm.module.css` - 문의 작성 폼 스타일
+
+### 6. 데이터베이스 스키마 가정
+
+```typescript
+// secrets 테이블의 questions 컬럼 구조 가정
+questions: JSONB | null
+
+// questions 배열의 각 항목 구조
+interface Question {
+  id: string;           // 고유 식별자
+  content: string;      // 문의 내용
+  createdAt: string;    // 생성 시간 (ISO 8601)
+}
+```
+
+### 7. 구현 예시 코드 구조
+
+#### 7.1 queries.ts - 문의 조회
+```typescript
+// fetchSecretById 함수에 questions 필드 추가
+export async function fetchSecretById(secretId: string) {
+  const { data, error } = await supabase
+    .from('secrets')
+    .select('*, questions')  // questions 필드 추가
+    .eq('id', secretId)
+    .single();
+  
+  // questions 파싱 및 처리
+  const questions = rawData.questions || [];
+  // ...
+}
+```
+
+#### 7.2 mutations.ts - 문의 등록
+```typescript
+export async function createQuestion(
+  secretId: string,
+  content: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 1. 기존 questions 조회
+    const { data: secretData, error: fetchError } = await supabase
+      .from('secrets')
+      .select('questions')
+      .eq('id', secretId)
+      .single();
+    
+    if (fetchError) {
+      return { success: false, error: fetchError.message };
+    }
+    
+    // 2. 새 문의 항목 생성
+    const newQuestion = {
+      id: crypto.randomUUID() || Date.now().toString(),
+      content: content.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    
+    // 3. questions 배열에 추가
+    const existingQuestions = secretData.questions || [];
+    const updatedQuestions = [...existingQuestions, newQuestion];
+    
+    // 4. 업데이트
+    const { error: updateError } = await supabase
+      .from('secrets')
+      .update({ questions: updatedQuestions })
+      .eq('id', secretId);
+    
+    if (updateError) {
+      return { success: false, error: updateError.message };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('문의 등록 중 오류 발생:', error);
+    return { success: false, error: '문의 등록 중 오류가 발생했습니다.' };
+  }
+}
+```
+
+#### 7.3 SecretComments.tsx - 컴포넌트 구조
+```typescript
+"use client";
+
+import { useState, useEffect } from "react";
+import styles from "./SecretComments.module.css";
+import QuestionForm from "./QuestionForm";
+import QuestionsList from "./QuestionsList";
+
+interface Question {
+  id: string;
+  content: string;
+  createdAt: string;
+}
+
+interface SecretCommentsProps {
+  secretId: string;
+  questions?: Question[];
+}
+
+export default function SecretComments({ secretId, questions = [] }: SecretCommentsProps) {
+  const [localQuestions, setLocalQuestions] = useState<Question[]>(questions);
+  const [showForm, setShowForm] = useState(false);
+  
+  // 문의 등록 핸들러
+  const handleQuestionSubmit = async (content: string) => {
+    // createQuestion 호출 및 로컬 상태 업데이트
+  };
+  
+  return (
+    <section className={styles.comments}>
+      <h3 className={styles.title}>문의하기 · 댓글</h3>
+      {/* 문의 목록 */}
+      <QuestionsList questions={localQuestions} />
+      {/* 문의 작성 폼 */}
+      {showForm ? (
+        <QuestionForm
+          onSubmit={handleQuestionSubmit}
+          onCancel={() => setShowForm(false)}
+        />
+      ) : (
+        <button
+          type="button"
+          className={styles.inquiryBtn}
+          onClick={() => setShowForm(true)}
+        >
+          문의하기
+        </button>
+      )}
+    </section>
+  );
+}
+```
+
+### 8. 주의사항
+
+#### 8.1 로그인 연동 없음
+- 사용자 인증 없이 구현
+- 작성자 정보를 저장하지 않음
+- 문의 수정/삭제 기능은 구현하지 않음
+
+#### 8.2 데이터 동기화
+- 문의 등록 후 페이지 새로고침 없이 목록에 반영
+- React 상태 관리 활용 (useState 등)
+- 필요시 React Query 또는 SWR 활용 고려
+
+#### 8.3 에러 처리
+- 문의 등록 실패 시 사용자에게 에러 메시지 표시
+- 네트워크 오류 등 예외 상황 처리
+
+#### 8.4 성능 고려
+- questions 배열이 큰 경우 가상 스크롤링 고려
+- 문의 목록 로딩 상태 표시
+
+### 9. 스타일 가이드
+
+#### 9.1 디자인 일관성
+- 기존 SecretComments 스타일과 일관성 유지
+- 골드 색상 테마 (#c7a74a) 활용
+- 다크 모드 배경 (rgba(27, 27, 27, 0.8)) 활용
+
+#### 9.2 반응형 디자인
+- 모바일 및 데스크톱 환경 모두 지원
+- 문의 목록은 최대 높이 제한 및 스크롤 처리
+
+### 10. 테스트 고려사항
+
+#### 10.1 기능 테스트
+- 문의 등록 기능 테스트
+- 문의 조회 기능 테스트
+- 빈 값 입력 시 유효성 검사 테스트
+- questions가 null인 경우 처리 테스트
+
+#### 10.2 에러 케이스 테스트
+- 네트워크 오류 시 처리
+- 데이터베이스 오류 시 처리
+
+## 구현 체크리스트
+
+- [ ] queries.ts에 questions 필드 조회 추가
+- [ ] mutations.ts에 createQuestion 함수 추가
+- [ ] SecretDetail.tsx에 questions 타입 추가
+- [ ] SecretComments.tsx 컴포넌트 확장
+- [ ] QuestionsList 컴포넌트 구현 (선택사항)
+- [ ] QuestionForm 컴포넌트 구현 (선택사항)
+- [ ] 문의 등록 후 목록 즉시 반영 기능
+- [ ] 문의 목록 스타일링
+- [ ] 문의 작성 폼 스타일링
+- [ ] 에러 처리 및 사용자 피드백
+- [ ] 빈 문의 목록 상태 UI
+- [ ] 로딩 상태 표시 (선택사항)
+
+## 참고 파일
+- `components/secrets-detail/SecretComments.tsx` - 메인 컴포넌트
+- `components/secrets-detail/SecretComments.module.css` - 스타일 파일
+- `components/secrets-list/queries.ts` - 데이터 조회 함수
+- `components/secrets-detail/mutations.ts` - 데이터 변경 함수
+- `components/secrets-detail/SecretDetail.tsx` - 상세 컴포넌트
+
