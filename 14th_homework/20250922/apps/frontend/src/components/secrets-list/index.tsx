@@ -1,8 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import React, { useEffect, useState, useRef } from "react";
 import { useQuery } from "@apollo/client";
 import { useModal } from "@/commons/providers/modal/modal.provider";
 import { authManager } from "@/lib/auth";
@@ -10,67 +8,29 @@ import { FETCH_USER_LOGGED_IN } from "@/commons/layout/navigation/queries";
 import HotSecrets from "./hot-secrets";
 import SaleSecrets from "./sale-secrets";
 import RecommendedSecrets from "./recommended-secrets";
-import { fetchHotSecrets, fetchSaleSecrets, fetchRecommendedSecrets } from "./queries";
-import { Secret } from "./types";
 import LoginModal from "./modals/LoginModal";
+import SecretsPageHeader from "./secrets-page-header";
+import AuthButton from "./auth-button";
+import LoadingSection from "./loading-section";
+import { useSecretsData } from "./hooks/use-secrets-data";
 import styles from "./styles.module.css";
 
 export default function SecretsListPage() {
-  const pathname = usePathname();
   const { openModal, closeModal } = useModal();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const hasOpenedModalRef = useRef(false);
   
-  // Supabase 데이터 상태
-  const [hotSecrets, setHotSecrets] = useState<Secret[]>([]);
-  const [saleSecrets, setSaleSecrets] = useState<Secret[]>([]);
-  const [recommendedSecrets, setRecommendedSecrets] = useState<Secret[]>([]);
-  const [loadingHot, setLoadingHot] = useState(true);
-  const [loadingSale, setLoadingSale] = useState(true);
-  const [loadingRecommended, setLoadingRecommended] = useState(true);
+  // 데이터 페칭 훅 사용
+  const { hotSecrets, saleSecrets, recommendedSecrets, loadingHot, loadingSale, loadingRecommended } = useSecretsData();
 
   useEffect(() => {
     authManager.initializeToken();
     setIsLoggedIn(authManager.isLoggedIn());
   }, []);
 
-  // Supabase에서 데이터 가져오기 - 각 섹션을 독립적으로 로딩하여 점진적 렌더링
-  useEffect(() => {
-    async function loadSecrets() {
-      // Hot Secrets 먼저 로딩 (가장 중요한 섹션)
-      try {
-        const hot = await fetchHotSecrets();
-        setHotSecrets(hot);
-      } catch (error) {
-        console.error('Failed to load hot secrets:', error);
-      } finally {
-        setLoadingHot(false);
-      }
-
-      // Sale Secrets와 Recommended Secrets는 병렬로 로딩
-      Promise.all([
-        fetchSaleSecrets().then(sale => {
-          setSaleSecrets(sale);
-          setLoadingSale(false);
-        }).catch(error => {
-          console.error('Failed to load sale secrets:', error);
-          setLoadingSale(false);
-        }),
-        fetchRecommendedSecrets().then(recommended => {
-          setRecommendedSecrets(recommended);
-          setLoadingRecommended(false);
-        }).catch(error => {
-          console.error('Failed to load recommended secrets:', error);
-          setLoadingRecommended(false);
-        })
-      ]);
-    }
-    loadSecrets();
-  }, []);
-
   const [shouldSkipQuery, setShouldSkipQuery] = useState(!authManager.isLoggedIn());
 
-  const { data, error, refetch } = useQuery(FETCH_USER_LOGGED_IN, {
+  const { error, refetch } = useQuery(FETCH_USER_LOGGED_IN, {
     skip: shouldSkipQuery,
     errorPolicy: 'ignore',
     onCompleted: () => {
@@ -128,88 +88,43 @@ export default function SecretsListPage() {
     }
   }, [error, isLoggedIn, openModal, closeModal, refetch]);
 
-  const handleLoginClick = useCallback(() => {
-    openModal(
-      <LoginModal
-        onCancel={closeModal}
-        onSuccess={async () => {
-          // 로그인 성공 후 토큰이 저장되었으므로 쿼리 다시 실행
-          setShouldSkipQuery(false);
-          if (authManager.isLoggedIn()) {
-            try {
-              await refetch();
-              setIsLoggedIn(true);
-            } catch (err) {
-              console.error('사용자 정보 조회 실패:', err);
-            }
-          }
-          closeModal();
-        }}
-      />
-    );
-  }, [openModal, closeModal, refetch]);
-
-  const handleLogoutClick = useCallback(() => {
-    authManager.clearToken();
-    setIsLoggedIn(false);
-    window.location.reload();
-  }, []);
+  const handleLoginSuccess = async () => {
+    // 로그인 성공 후 토큰이 저장되었으므로 쿼리 다시 실행
+    setShouldSkipQuery(false);
+    if (authManager.isLoggedIn()) {
+      try {
+        await refetch();
+        setIsLoggedIn(true);
+      } catch (err) {
+        console.error('사용자 정보 조회 실패:', err);
+      }
+    }
+  };
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <div className={styles.navigation}>
-          <Link 
-            href="/secrets" 
-            className={`${styles.navLink} ${pathname === "/secrets" ? styles.active : ""}`}
-          >
-            비밀 게시판
-          </Link>
-          <Link 
-            href="/secrets/mypage" 
-            className={`${styles.navLink} ${pathname === "/secrets/mypage" ? styles.active : ""}`}
-          >
-            마이 페이지
-          </Link>
-          {isLoggedIn ? (
-            <button
-              onClick={handleLogoutClick}
-              className={styles.logoutButton}
-            >
-              로그아웃
-            </button>
-          ) : (
-            <button
-              onClick={handleLoginClick}
-              className={styles.loginButton}
-            >
-              로그인
-            </button>
-          )}
-        </div>
-        <h1 className={styles.mainTitle}>who&apos;s Secret</h1>
-        <p className={styles.mainSubtitle}>
-          누구나 알고 싶지만, 아무도 말하지 않는 이야기들.
-        </p>
-      </div>
+      <SecretsPageHeader
+        title="who's Secret"
+        subtitle="누구나 알고 싶지만, 아무도 말하지 않는 이야기들."
+        authButton={
+          <AuthButton
+            isLoggedIn={isLoggedIn}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        }
+      />
 
-      {loadingHot ? (
-        <div style={{ textAlign: 'center', padding: '2rem' }}>로딩 중...</div>
-      ) : (
+      <LoadingSection isLoading={loadingHot}>
         <HotSecrets secrets={hotSecrets} />
-      )}
+      </LoadingSection>
       
-      {loadingSale ? (
-        <div style={{ textAlign: 'center', padding: '1rem' }}>할인 상품 로딩 중...</div>
-      ) : (
+      <LoadingSection isLoading={loadingSale} loadingMessage="할인 상품 로딩 중...">
         <SaleSecrets secrets={saleSecrets} />
-      )}
+      </LoadingSection>
       
-      {loadingRecommended ? (
-        <div style={{ textAlign: 'center', padding: '1rem' }}>추천 상품 로딩 중...</div>
-      ) : (
+      <LoadingSection isLoading={loadingRecommended} loadingMessage="추천 상품 로딩 중...">
         <RecommendedSecrets secrets={recommendedSecrets} />
-      )}
+      </LoadingSection>
     </div>
   );
 }

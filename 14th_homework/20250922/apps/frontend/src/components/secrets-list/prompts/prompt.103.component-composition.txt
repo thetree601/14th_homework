@@ -1,0 +1,248 @@
+# /secrets 페이지 컴포넌트 합성(Component Composition) 개선
+
+## 목표
+/secrets 메인 페이지의 `SecretsListPage` 컴포넌트를 컴포넌트 합성 패턴을 적용하여 관심사를 분리하고, 재사용성과 유지보수성을 향상시킵니다.
+
+## 현재 구조의 문제점
+
+### 1. 단일 책임 원칙 위반
+- `SecretsListPage` 컴포넌트가 너무 많은 책임을 가지고 있음:
+  - 헤더 UI 렌더링
+  - 인증 상태 관리 및 UI
+  - 데이터 페칭 로직
+  - 로딩 상태 관리
+  - 각 섹션 렌더링
+
+### 2. 재사용성 부족
+- 헤더 부분이 `SecretsListPage`에 하드코딩되어 있어 다른 페이지에서 재사용 불가
+- 인증 버튼 로직이 컴포넌트 내부에 있어 독립적으로 사용 불가
+- 로딩 상태 처리가 각 섹션마다 반복적으로 구현됨
+
+### 3. 테스트 어려움
+- 모든 로직이 하나의 컴포넌트에 집중되어 있어 단위 테스트 작성이 어려움
+- 각 기능을 독립적으로 테스트하기 어려움
+
+### 4. 유지보수성 저하
+- 변경 사항이 발생할 때 전체 컴포넌트를 수정해야 함
+- 코드 가독성 저하
+
+## 해결 방법: 컴포넌트 합성 패턴 적용
+
+### 1. 헤더 컴포넌트 분리
+**위치**: `/src/components/secrets-list/secrets-page-header/index.tsx`
+**스타일**: `/src/components/secrets-list/secrets-page-header/styles.module.css`
+
+#### 역할
+- 페이지 헤더 UI를 담당하는 재사용 가능한 컴포넌트
+- 네비게이션 링크, 타이틀, 서브타이틀을 표시
+- 인증 버튼은 `children` 또는 `authButton` prop으로 받아서 합성
+
+#### Props 인터페이스
+```typescript
+interface SecretsPageHeaderProps {
+  title: string;
+  subtitle: string;
+  authButton?: React.ReactNode;
+}
+```
+
+#### 구현 요구사항
+- `usePathname`을 사용하여 현재 경로에 따라 활성 링크 스타일 적용
+- `/secrets`와 `/secrets/mypage` 링크 제공
+- `authButton` prop이 제공되면 네비게이션 영역에 표시
+- 기존 스타일(`styles.module.css`)을 그대로 사용하되, 필요시 분리된 스타일 파일 생성
+
+### 2. 인증 버튼 컴포넌트 분리
+**위치**: `/src/components/secrets-list/auth-button/index.tsx`
+**스타일**: `/src/components/secrets-list/auth-button/styles.module.css`
+
+#### 역할
+- 로그인/로그아웃 버튼을 담당하는 독립적인 컴포넌트
+- 인증 상태에 따라 버튼 텍스트와 동작 변경
+- 로그인 모달 열기, 로그아웃 처리 등의 로직 포함
+
+#### Props 인터페이스
+```typescript
+interface AuthButtonProps {
+  isLoggedIn: boolean;
+  onLoginSuccess?: () => void;
+  onLogoutSuccess?: () => void;
+}
+```
+
+#### 구현 요구사항
+- `isLoggedIn` prop에 따라 "로그인" 또는 "로그아웃" 버튼 표시
+- 로그인 버튼 클릭 시 `LoginModal` 열기
+- 로그인 성공 시 `onLoginSuccess` 콜백 호출
+- 로그아웃 버튼 클릭 시 토큰 제거 및 `onLogoutSuccess` 콜백 호출 후 페이지 리로드
+- 기존 스타일(`styles.module.css`)을 그대로 사용하되, 필요시 분리된 스타일 파일 생성
+
+### 3. 로딩 섹션 래퍼 컴포넌트 생성
+**위치**: `/src/components/secrets-list/loading-section/index.tsx`
+
+#### 역할
+- 로딩 상태를 처리하는 범용 래퍼 컴포넌트
+- 로딩 중일 때 메시지를 표시하고, 완료되면 자식 컴포넌트를 렌더링
+
+#### Props 인터페이스
+```typescript
+interface LoadingSectionProps {
+  isLoading: boolean;
+  loadingMessage?: string;
+  children: React.ReactNode;
+}
+```
+
+#### 구현 요구사항
+- `isLoading`이 `true`일 때 `loadingMessage` 표시 (기본값: "로딩 중...")
+- `isLoading`이 `false`일 때 `children` 렌더링
+- 인라인 스타일 사용 (별도 CSS 파일 불필요)
+
+### 4. 데이터 페칭 커스텀 훅 분리
+**위치**: `/src/components/secrets-list/hooks/use-secrets-data.ts`
+
+#### 역할
+- 비밀 데이터 페칭 로직을 담당하는 커스텀 훅
+- 각 섹션(Hot, Sale, Recommended)의 데이터와 로딩 상태를 관리
+
+#### 반환값
+```typescript
+{
+  hotSecrets: Secret[];
+  saleSecrets: Secret[];
+  recommendedSecrets: Secret[];
+  loadingHot: boolean;
+  loadingSale: boolean;
+  loadingRecommended: boolean;
+}
+```
+
+#### 구현 요구사항
+- Hot Secrets를 먼저 로딩 (가장 중요한 섹션)
+- Sale Secrets와 Recommended Secrets는 병렬로 로딩
+- 각 섹션의 로딩 상태를 독립적으로 관리
+- 에러 발생 시 콘솔에 에러 로그 출력 및 로딩 상태를 `false`로 설정
+- 기존 `fetchHotSecrets`, `fetchSaleSecrets`, `fetchRecommendedSecrets` 함수 사용
+
+### 5. 개선된 메인 컴포넌트
+**위치**: `/src/components/secrets-list/index.tsx`
+
+#### 변경 사항
+- `useSecretsData` 훅을 사용하여 데이터 페칭 로직 분리
+- `SecretsPageHeader` 컴포넌트로 헤더 UI 분리
+- `AuthButton` 컴포넌트로 인증 UI 분리
+- `LoadingSection` 컴포넌트로 로딩 상태 처리 분리
+- 인증 관련 로직은 유지하되, UI는 합성된 컴포넌트 사용
+
+#### 구조
+```tsx
+export default function SecretsListPage() {
+  // 데이터 페칭 훅 사용
+  const { hotSecrets, saleSecrets, recommendedSecrets, loadingHot, loadingSale, loadingRecommended } = useSecretsData();
+  
+  // 인증 관련 로직 (기존과 동일)
+  // ...
+  
+  return (
+    <div className={styles.container}>
+      <SecretsPageHeader
+        title="who's Secret"
+        subtitle="누구나 알고 싶지만, 아무도 말하지 않는 이야기들."
+        authButton={
+          <AuthButton
+            isLoggedIn={isLoggedIn}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        }
+      />
+
+      <LoadingSection isLoading={loadingHot}>
+        <HotSecrets secrets={hotSecrets} />
+      </LoadingSection>
+      
+      <LoadingSection isLoading={loadingSale} loadingMessage="할인 상품 로딩 중...">
+        <SaleSecrets secrets={saleSecrets} />
+      </LoadingSection>
+      
+      <LoadingSection isLoading={loadingRecommended} loadingMessage="추천 상품 로딩 중...">
+        <RecommendedSecrets secrets={recommendedSecrets} />
+      </LoadingSection>
+    </div>
+  );
+}
+```
+
+## 파일 구조
+
+```
+src/
+└── components/
+    └── secrets-list/
+        ├── index.tsx                    # 메인 컴포넌트 (개선됨)
+        ├── secrets-page-header/
+        │   ├── index.tsx
+        │   └── styles.module.css
+        ├── auth-button/
+        │   ├── index.tsx
+        │   └── styles.module.css
+        ├── loading-section/
+        │   └── index.tsx
+        ├── hooks/
+        │   └── use-secrets-data.ts
+        ├── hot-secrets/
+        ├── sale-secrets/
+        ├── recommended-secrets/
+        └── prompts/
+            └── prompt.103.component-composition.txt
+```
+
+## 구현 세부사항
+
+### 스타일 파일 처리
+- 기존 `styles.module.css`의 헤더 관련 스타일을 `secrets-page-header/styles.module.css`로 이동
+- 기존 `styles.module.css`의 인증 버튼 관련 스타일을 `auth-button/styles.module.css`로 이동
+- 메인 컴포넌트의 `styles.module.css`는 컨테이너 스타일만 유지
+
+### 인증 로직 유지
+- `SecretsListPage`에서 인증 관련 로직은 그대로 유지
+- GraphQL 쿼리(`FETCH_USER_LOGGED_IN`) 및 토큰 관리 로직 유지
+- 자동 로그인 모달 열기 로직 유지
+- `AuthButton`은 UI만 담당하고, 인증 상태는 부모 컴포넌트에서 관리
+
+### 타입 정의
+- `Secret` 타입은 기존 `types.ts`에서 import하여 사용
+- 새로운 컴포넌트의 Props 인터페이스는 각 컴포넌트 파일 내부에 정의
+
+## 개선 효과
+
+### 1. 관심사 분리 (Separation of Concerns)
+- 헤더, 인증, 데이터 페칭, 로딩 처리가 각각 독립적인 컴포넌트/훅으로 분리
+- 각 컴포넌트가 단일 책임만 가지게 됨
+
+### 2. 재사용성 향상
+- `SecretsPageHeader`는 다른 페이지에서도 사용 가능
+- `AuthButton`은 어디서든 인증 UI가 필요한 곳에 사용 가능
+- `LoadingSection`은 범용적으로 사용 가능한 로딩 래퍼
+
+### 3. 테스트 용이성
+- 각 컴포넌트를 독립적으로 테스트 가능
+- 데이터 페칭 로직을 훅으로 분리하여 테스트 용이
+
+### 4. 유지보수성 향상
+- 변경 사항이 발생해도 해당 컴포넌트만 수정하면 됨
+- 코드 가독성 향상
+- 버그 발생 시 원인 파악이 쉬워짐
+
+### 5. 컴포넌트 합성 패턴
+- `children` prop과 다른 컴포넌트를 조합하여 유연한 구조 생성
+- Props를 통한 컴포넌트 조합으로 다양한 시나리오 대응 가능
+
+## 참고사항
+
+- 기존 기능은 모두 유지되어야 함
+- 스타일은 기존 디자인과 동일하게 유지
+- 인증 관련 로직의 동작은 변경되지 않아야 함
+- 데이터 페칭 로직의 동작은 변경되지 않아야 함
+- 각 컴포넌트는 독립적으로 동작할 수 있어야 함
+- TypeScript 타입 안정성 유지
+
