@@ -274,3 +274,6 @@ export default function SecretComments({ secretId, questions = [] }: SecretComme
 - `components/secrets-detail/SecretDetail.tsx` - 상세 컴포넌트
 
 
+
+
+

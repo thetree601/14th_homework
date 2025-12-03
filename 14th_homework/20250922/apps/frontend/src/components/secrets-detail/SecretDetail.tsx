@@ -7,7 +7,7 @@ import SecretContent from "./SecretContent";
 import SecretActions from "./SecretActions";
 import SecretGeo from "./SecretGeo";
 import SecretComments from "./SecretComments";
-import { Question } from "./mutations";
+import { Question, Answer } from "./mutations";
 
 export type SecretDetailData = {
 	id: string;
@@ -23,6 +23,7 @@ export type SecretDetailData = {
 	latitude?: string;
 	longitude?: string;
 	questions?: Question[];
+	answers?: Answer[];
 };
 
 export default function SecretDetail({ data }: { data: SecretDetailData }) {
@@ -53,7 +54,7 @@ export default function SecretDetail({ data }: { data: SecretDetailData }) {
 					/>
 				</div>
 			</div>
-			<SecretComments secretId={data.id} questions={data.questions} />
+			<SecretComments secretId={data.id} questions={data.questions} answers={data.answers} />
 		</div>
 	);
 }

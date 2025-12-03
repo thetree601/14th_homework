@@ -1,0 +1,202 @@
+# 답변하기 기능 구현 가이드
+
+## 개요
+/secrets 상세페이지의 문의하기 기능에 답변하기 기능을 추가합니다. 각 문의(Question)에 대해 답변을 작성, 수정, 삭제할 수 있는 기능을 제공합니다. `secrets` 테이블의 `answers` JSONB 컬럼을 활용합니다.
+
+## 핵심 요구사항
+
+### 1. 데이터베이스 구조
+
+#### 1.1 secrets 테이블에 answers 컬럼 추가
+**컬럼명**: `answers` (JSONB, nullable)
+
+
+### 2. 기능 요구사항
+
+#### 2.1 답변 작성
+- 각 문의 항목 아래에 "답변하기" 버튼 표시
+- 답변하기 클릭 시 해당 문의에 대한 답변 작성 폼 표시
+- 등록 시 `secrets` 테이블의 `answers` 배열에 새 항목 추가
+- 등록 성공 시 해당 문의의 답변 목록에 즉시 반영
+
+#### 2.2 답변 조회
+- 각 문의 항목 아래에 해당 문의에 대한 답변 목록 표시
+- 답변 목록을 최신순(created_at DESC)으로 정렬하여 표시
+
+#### 2.3 답변 수정
+- 각 답변 항목에 수정 아이콘 표시 (`/images/edit.png`)
+- 수정 모드에서는 textarea와 저장/취소 버튼 표시
+- 저장 시 `answers` 배열에서 해당 항목 업데이트
+
+#### 2.4 답변 삭제
+- 각 답변 항목에 삭제 아이콘 표시 (`/images/delete2.png`)
+- 삭제 확인 다이얼로그 표시 후 `answers` 배열에서 제거
+
+### 3. UI/UX 요구사항
+
+#### 3.1 답변 목록 표시
+- 각 문의 항목 아래에 들여쓰기된 형태로 답변 목록 표시
+- 답변 항목은 문의 항목과 시각적으로 구분되도록 스타일링
+- 답변 항목 배경색은 문의 항목보다 약간 더 어둡거나 다른 색상으로 구분
+- 답변 항목 간 적절한 간격 유지 (8px ~ 12px)
+- 답변 항목 좌측 여백: 24px ~ 32px
+
+#### 3.2 답변 작성 폼
+- 각 문의 항목 아래에 "답변하기" 버튼 표시
+- 버튼 클릭 시 해당 문의에 대한 답변 작성 폼 표시
+- 폼은 QuestionForm과 유사한 스타일 적용
+- textarea 사용 (rows: 3 ~ 4)
+- 등록 버튼 및 취소 버튼 제공
+- 폼 제출 시 유효성 검사 (빈 값 체크 등)
+- 답변 작성 중인 문의는 다른 답변 작성 폼 숨김 처리
+
+#### 3.3 아이콘 배치
+- 각 답변 항목의 우측 하단에 수정/삭제 아이콘 배치
+- 아이콘은 hover 시 시각적 피드백 제공
+- 아이콘 크기: 16px (기존 문의하기와 동일)
+- 아이콘 간 간격: 8px (기존 문의하기와 동일)
+- Next.js Image 컴포넌트 사용
+
+#### 3.4 아이콘 파일 경로
+- 수정 아이콘: `/images/edit.png`
+- 삭제 아이콘: `/images/delete2.png`
+
+#### 3.5 수정 모드 UI
+- 수정 모드 진입 시 해당 답변 항목의 content가 편집 가능한 textarea로 전환
+- textarea는 기존 QuestionForm의 textarea와 유사한 스타일
+- 저장 버튼과 취소 버튼 표시
+- 수정 모드에서는 다른 답변 항목의 수정/삭제 아이콘 비활성화 또는 숨김 처리
+
+#### 3.6 삭제 확인
+- 삭제 아이콘 클릭 시 확인 다이얼로그 표시
+- "정말 삭제하시겠습니까?" 메시지와 함께 확인/취소 버튼 제공
+- window.confirm 사용 또는 기존 DeleteConfirmModal 컴포넌트 활용
+
+### 4. 기술 요구사항
+
+#### 4.1 Supabase Mutations
+- `mutations.ts`에 답변 작성/수정/삭제 함수 추가
+- `secrets` 테이블의 `answers` JSONB 컬럼을 업데이트하는 방식으로 구현
+- 기존 `createQuestion`, `updateQuestion`, `deleteQuestion` 함수와 동일한 패턴
+
+#### 4.3 컴포넌트 구조
+- `QuestionsList.tsx` 확장하여 답변 목록 표시 기능 추가
+- `AnswerForm.tsx` 새로 생성 (답변 작성 폼 컴포넌트)
+- `AnswerItem.tsx` 새로 생성 (개별 답변 항목 컴포넌트, 선택사항)
+- `SecretComments.tsx`에서 답변 관련 핸들러 구현 및 전달
+
+#### 4.4 상태 관리
+- 각 문의에 대한 답변 작성 폼 표시 상태 관리
+- 각 답변의 수정 모드 상태 관리
+- 로딩 상태 및 에러 상태 관리
+- 답변 목록을 `Record<string, Answer[]>` 형태로 관리 (question_id를 키로 사용)
+
+### 5. 구현 파일
+
+#### 5.1 수정할 파일
+- `components/secrets-detail/mutations.ts` - 답변 작성/수정/삭제 함수 추가 (기존 createQuestion/updateQuestion/deleteQuestion 패턴 참고)
+- `components/secrets-detail/QuestionsList.tsx` - 답변 목록 표시 기능 추가
+- `components/secrets-detail/QuestionsList.module.css` - 답변 관련 스타일 추가
+- `components/secrets-detail/SecretComments.tsx` - 답변 관련 핸들러 추가
+
+#### 5.2 새로 생성할 파일
+- `components/secrets-detail/AnswerForm.tsx` - 답변 작성 폼 컴포넌트 (QuestionForm 참고)
+- `components/secrets-detail/AnswerForm.module.css` - 답변 작성 폼 스타일
+
+### 6. 구현 참고사항
+
+- `mutations.ts`의 `createQuestion`, `updateQuestion`, `deleteQuestion` 함수와 동일한 패턴으로 구현
+- `answers` 배열도 `questions` 배열과 동일하게 `secrets` 테이블의 JSONB 컬럼으로 관리
+- `QuestionsList.tsx`에 답변 목록 표시 로직 추가 (문의 항목 아래에 들여쓰기)
+- 답변 작성/수정/삭제 아이콘은 기존 문의하기와 동일한 아이콘 사용
+
+### 7. CSS 스타일 가이드
+
+#### 7.1 답변 목록 스타일
+- 답변 항목은 문의 항목보다 들여쓰기된 형태로 표시
+- 답변 항목 배경색: `rgba(199, 167, 74, 0.08)` (문의보다 더 어둡게)
+- 답변 항목 테두리: `rgba(199, 167, 74, 0.2)` (문의보다 더 약하게)
+- 답변 항목 간 간격: 8px
+- 답변 항목 좌측 여백: 24px ~ 32px
+- 답변 항목 패딩: 12px
+
+#### 7.2 답변하기 버튼 스타일
+- 문의 항목 내부 하단에 배치
+- 기존 문의하기 버튼과 유사한 스타일
+- 크기는 문의하기 버튼보다 작게 (폰트 크기: 0.875rem)
+- 배경색: `rgba(199, 167, 74, 0.05)`
+- 호버 시: `rgba(199, 167, 74, 0.1)`
+
+#### 7.3 답변 작성 폼 스타일
+- QuestionForm과 유사한 스타일 적용
+- textarea 스타일은 QuestionForm의 textarea와 동일
+- 버튼 스타일도 QuestionForm과 일관성 유지
+
+#### 7.4 디자인 일관성
+- 기존 문의하기 스타일과 일관성 유지
+- 골드 색상 테마 (#c7a74a) 활용
+- 다크 모드 배경 (rgba(27, 27, 27, 0.8)) 활용
+- 아이콘 스타일은 기존 문의하기와 동일
+
+### 8. 주의사항
+
+#### 8.1 데이터베이스 컬럼 추가
+- Supabase 대시보드에서 `secrets` 테이블에 `answers` JSONB 컬럼 추가
+
+#### 8.2 데이터 동기화
+- 답변 작성/수정/삭제 후 페이지 새로고침 없이 목록에 반영
+- React 상태 관리 활용 (useState)
+- 여러 사용자가 동시에 답변을 작성하는 경우 실시간 동기화 고려 (선택사항)
+
+#### 8.3 에러 처리
+- 답변 작성/수정/삭제 실패 시 사용자에게 에러 메시지 표시
+- 네트워크 오류 등 예외 상황 처리
+- 수정 모드에서 에러 발생 시 수정 모드 유지 또는 취소 처리
+
+#### 8.4 UX 고려사항
+- 답변 작성 중인 문의는 다른 답변 작성 폼 숨김 처리
+- 수정 모드에서는 다른 답변 항목의 수정/삭제 비활성화
+- 삭제 전 확인 다이얼로그로 실수 방지
+- 로딩 상태 표시 (등록 중, 수정 중, 삭제 중 등)
+- 답변 작성/수정/삭제 성공 시 피드백 제공 (선택사항)
+
+#### 8.5 사용자 인증
+- 현재는 로그인 없이 구현 (모든 사용자가 모든 답변을 수정/삭제 가능)
+- 향후 작성자 정보 추가 시 본인 작성 답변만 수정/삭제 가능하도록 제한 필요
+
+
+### 9. 구현 체크리스트
+
+- [ ] Supabase에 `secrets` 테이블에 `answers` JSONB 컬럼 추가
+- [ ] mutations.ts에 createAnswer 함수 추가
+- [ ] mutations.ts에 updateAnswer 함수 추가
+- [ ] mutations.ts에 deleteAnswer 함수 추가
+- [ ] AnswerForm 컴포넌트 생성
+- [ ] AnswerForm.module.css 생성
+- [ ] QuestionsList.tsx에 답변 목록 표시 기능 추가
+- [ ] QuestionsList.tsx에 답변 작성 폼 표시 기능 추가
+- [ ] QuestionsList.tsx에 답변 수정/삭제 기능 추가
+- [ ] QuestionsList.module.css에 답변 관련 스타일 추가
+- [ ] SecretComments.tsx에 답변 관련 핸들러 추가
+- [ ] SecretComments.tsx에서 QuestionsList에 답변 핸들러 전달
+- [ ] 답변 작성/수정/삭제 아이콘 추가 (기존 아이콘 재사용)
+- [ ] 삭제 확인 다이얼로그 구현
+- [ ] 에러 처리 및 사용자 피드백
+- [ ] 로딩 상태 표시
+- [ ] 접근성 개선 (aria-label 등)
+- [ ] 답변이 없는 경우 안내 메시지 표시 (선택사항)
+- [ ] 답변 목록 정렬 (최신순)
+
+### 10. 참고 파일
+
+- `components/secrets-detail/SecretComments.tsx` - 메인 컴포넌트
+- `components/secrets-detail/QuestionsList.tsx` - 문의 목록 컴포넌트
+- `components/secrets-detail/QuestionsList.module.css` - 문의 목록 스타일
+- `components/secrets-detail/QuestionForm.tsx` - 문의 작성 폼 컴포넌트
+- `components/secrets-detail/QuestionForm.module.css` - 문의 작성 폼 스타일
+- `components/secrets-detail/mutations.ts` - 데이터 변경 함수
+- `components/secrets-detail/prompts/prompt.108.questions-feature.txt` - 문의하기 기능 구현 가이드
+- `components/secrets-detail/prompts/prompt.109.questions-edit-delete-feature.txt` - 문의하기 수정/삭제 기능 구현 가이드
+- `/public/images/edit.png` - 수정 아이콘
+- `/public/images/delete2.png` - 삭제 아이콘
+

@@ -192,6 +192,21 @@ export async function fetchSecretById(secretId: string) {
     }
   }
 
+  // answers 필드 파싱
+  let answersArray: Array<{ id: string; questionId: string; content: string; createdAt: string }> = [];
+  if (rawData.answers === null || rawData.answers === undefined) {
+    answersArray = [];
+  } else if (Array.isArray(rawData.answers)) {
+    answersArray = rawData.answers;
+  } else if (typeof rawData.answers === 'string') {
+    try {
+      const parsed = JSON.parse(rawData.answers);
+      answersArray = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      answersArray = [];
+    }
+  }
+
   const result = {
     id: rawData.id,
     title: rawData.title,
@@ -206,6 +221,7 @@ export async function fetchSecretById(secretId: string) {
     latitude: rawData.latitude?.toString() || '',
     longitude: rawData.longitude?.toString() || '',
     questions: questionsArray,
+    answers: answersArray,
   };
   
   return result;
